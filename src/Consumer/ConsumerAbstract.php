@@ -23,7 +23,7 @@ use Swoole\Timer;
 use W7\Core\Exception\Handler\ExceptionHandler;
 use W7\Mq\QueueManager;
 
-class ConsumerAbstract {
+abstract class ConsumerAbstract {
 	/**
 	 * The queue manager instance.
 	 *
@@ -46,8 +46,6 @@ class ConsumerAbstract {
 	protected $exceptions;
 
 	/**
-	 * Create a new queue worker.
-	 *
 	 * @param  QueueManager  $manager
 	 * @param  EventDispatcherInterface  $events
 	 * @param  ExceptionHandler  $exceptions
@@ -60,39 +58,14 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Listen to the given queue in a loop.
-	 *
 	 * @param  string  $connectionName
 	 * @param  string  $queue
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
 	 * @return void
 	 */
-	public function daemon($connectionName, $queue, WorkerOptions $options) {
-		itimeTick($options->sleep, function () use ($connectionName, $queue, $options) {
-			// First, we will attempt to get the next job off of the queue. We will also
-			// register the timeout handler and reset the alarm for this job so it is
-			// not stuck in a frozen state forever. Then, we can fire off this job.
-			$job = $this->getNextJob(
-				$this->manager->connection($connectionName),
-				$queue
-			);
-
-			$timerId = $this->registerTimeoutHandler($job, $options);
-
-			// If the daemon should run (not in maintenance mode, etc.), then we can run
-			// fire off this job for processing. Otherwise, we will need to sleep the
-			// worker so no more jobs are processed until they should be processed.
-			if ($job) {
-				$this->runJob($job, $connectionName, $options);
-			}
-
-			$this->resetTimeoutHandler($timerId);
-		});
-	}
+	abstract public function consume($connectionName, $queue, WorkerOptions $options);
 
 	/**
-	 * Register the worker timeout handler.
-	 *
 	 * @param  \Illuminate\Contracts\Queue\Job|null  $job
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
 	 * @return mixed
@@ -111,7 +84,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Reset the worker timeout handler.
 	 * @param $timerId
 	 */
 	protected function resetTimeoutHandler($timerId) {
@@ -119,8 +91,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Get the appropriate timeout for the given job.
-	 *
 	 * @param  \Illuminate\Contracts\Queue\Job|null  $job
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
 	 * @return int
@@ -130,8 +100,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Process the next job on the queue.
-	 *
 	 * @param  string  $connectionName
 	 * @param  string  $queue
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
@@ -143,17 +111,19 @@ class ConsumerAbstract {
 			$queue
 		);
 
+		$timerId = $this->registerTimeoutHandler($job, $options);
+
 		// If we're able to pull a job off of the stack, we will process it and then return
 		// from this method. If there is no job on the queue, we will "sleep" the worker
 		// for the specified number of seconds, then keep processing jobs after sleep.
 		if ($job) {
-			return $this->runJob($job, $connectionName, $options);
+			$this->runJob($job, $connectionName, $options);
 		}
+
+		$this->resetTimeoutHandler($timerId);
 	}
 
 	/**
-	 * Get the next job from the queue connection.
-	 *
 	 * @param  \Illuminate\Contracts\Queue\Queue  $connection
 	 * @param  string  $queue
 	 * @return \Illuminate\Contracts\Queue\Job|null
@@ -171,8 +141,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Process the given job.
-	 *
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
@@ -187,8 +155,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Process the given job from the queue.
-	 *
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
@@ -232,8 +198,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Handle an exception that occurred while the job was running.
-	 *
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
@@ -278,10 +242,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Mark the given job as failed if it has exceeded the maximum allowed attempts.
-	 *
-	 * This will likely be because the job previously exceeded a timeout.
-	 *
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @param  int  $maxTries
@@ -306,8 +266,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Mark the given job as failed if it has exceeded the maximum allowed attempts.
-	 *
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @param  int  $maxTries
@@ -327,8 +285,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Mark the given job as failed and raise the relevant event.
-	 *
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @param  \Exception  $e
 	 * @return void
@@ -338,8 +294,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Raise the before queue job event.
-	 *
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @return void
@@ -352,8 +306,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Raise the after queue job event.
-	 *
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @return void
@@ -366,8 +318,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Raise the exception occurred queue job event.
-	 *
 	 * @param  string  $connectionName
 	 * @param  \Illuminate\Contracts\Queue\Job  $job
 	 * @param  \Exception  $e
@@ -382,8 +332,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Create an instance of MaxAttemptsExceededException.
-	 *
 	 * @param  \Illuminate\Contracts\Queue\Job|null  $job
 	 * @return \Illuminate\Queue\MaxAttemptsExceededException
 	 */
@@ -394,8 +342,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Get the queue manager instance.
-	 *
 	 * @return QueueManager
 	 */
 	public function getManager() {
@@ -403,8 +349,6 @@ class ConsumerAbstract {
 	}
 
 	/**
-	 * Set the queue manager instance.
-	 *
 	 * @param  QueueManager  $manager
 	 * @return void
 	 */

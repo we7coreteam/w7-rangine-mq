@@ -16,12 +16,28 @@ use Illuminate\Container\Container;
 use Illuminate\Queue\Failed\DatabaseFailedJobProvider;
 use Illuminate\Queue\Failed\NullFailedJobProvider;
 use W7\Core\Database\ConnectionResolver;
+use W7\Core\Events\Dispatcher;
+use W7\Core\Exception\HandlerExceptions;
 use W7\Core\Provider\ProviderAbstract;
+use W7\Core\Server\ServerEnum;
+use W7\Core\Server\ServerEvent;
 use W7\Mq\Connector\DatabaseConnector;
+use W7\Mq\Connector\RabbitMQConnector;
 use W7\Mq\Connector\RedisConnector;
+use W7\Mq\Consumer\DatabaseMQConsumer;
+use W7\Mq\Consumer\RabbitMQConsumer;
+use W7\Mq\Consumer\RedisMQConsumer;
+use W7\Mq\Server\Server;
 
 class ServiceProvider extends ProviderAbstract {
 	public function register() {
+		$this->registerServer('mq', Server::class);
+		/**
+		 * @var ServerEvent $event
+		 */
+		$event = $this->container->singleton(ServerEvent::class);
+		$this->registerServerEvent('mq', $event->getDefaultEvent()[ServerEnum::TYPE_PROCESS]);
+
 		$this->registerManager();
 		$this->registerConnection();
 		$this->registerFailedJobServices();
@@ -42,7 +58,19 @@ class ServiceProvider extends ProviderAbstract {
 			$container['config']['queue.connections'] = $this->config->get('queue.connections', []);
 
 			$manager = new QueueManager($container);
-			$this->registerConnectors($manager);
+			$this->registerConnectorAndConsumer($manager);
+
+			$container->singleton(\Illuminate\Contracts\Events\Dispatcher::class, function () {
+				return $this->container->get(Dispatcher::class);
+			});
+			$container->singleton(\Illuminate\Contracts\Container\Container::class, function () use ($container) {
+				return $container;
+			});
+			$container->singleton(\Illuminate\Contracts\Bus\Dispatcher::class, function () use ($container, $manager) {
+				return new \Illuminate\Bus\Dispatcher($container, function ($connection = null) use ($manager) {
+					return $manager->connection($connection);
+				});
+			});
 
 			return $manager;
 		});
@@ -62,36 +90,63 @@ class ServiceProvider extends ProviderAbstract {
 	/**
 	 * Register the connectors on the queue manager.
 	 *
-	 * @param  \Illuminate\Queue\QueueManager  $manager
+	 * @param  QueueManager  $manager
 	 * @return void
 	 */
-	public function registerConnectors($manager) {
-		foreach (['Database', 'Redis'] as $connector) {
-			$this->{"register{$connector}Connector"}($manager);
+	public function registerConnectorAndConsumer($manager) {
+		foreach (['Database', 'Redis', 'Rabbit'] as $connector) {
+			$this->{"register{$connector}ConnectorAndConsumer"}($manager);
 		}
 	}
 
 	/**
 	 * Register the database queue connector.
 	 *
-	 * @param  \Illuminate\Queue\QueueManager  $manager
+	 * @param  QueueManager $manager
 	 * @return void
 	 */
-	protected function registerDatabaseConnector($manager) {
+	protected function registerDatabaseConnectorAndConsumer($manager) {
 		$manager->addConnector('database', function () {
 			return new DatabaseConnector($this->container->get(ConnectionResolver::class));
+		});
+		$manager->addConsumer('database', function ($options = []) use ($manager) {
+			return new DatabaseMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
 		});
 	}
 
 	/**
 	 * Register the Redis queue connector.
 	 *
-	 * @param  \Illuminate\Queue\QueueManager  $manager
+	 * @param  QueueManager  $manager
 	 * @return void
 	 */
-	protected function registerRedisConnector($manager) {
+	protected function registerRedisConnectorAndConsumer($manager) {
 		$manager->addConnector('redis', function () {
 			return new RedisConnector($this->app['redis']);
+		});
+		$manager->addConsumer('redis', function ($options = []) use ($manager) {
+			return new RedisMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
+		});
+	}
+
+	/**
+	 * Register the Redis queue connector.
+	 *
+	 * @param  QueueManager  $manager
+	 * @return void
+	 */
+	protected function registerRabbitConnectorAndConsumer($manager) {
+		$manager->addConnector('rabbit_mq', function () {
+			return new RabbitMQConnector($this->container->singleton(Dispatcher::class));
+		});
+		$manager->addConsumer('rabbit_mq', function ($options = []) use ($manager) {
+			$consumer = new RabbitMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
+			$consumer->setContainer($this->container->singleton(Container::class));
+			$consumer->setConsumerTag($options['customer_tag']);
+			$consumer->setPrefetchCount($options['prefetch_count']);
+			$consumer->setPrefetchSize($options['prefetch_size']);
+
+			return $consumer;
 		});
 	}
 
