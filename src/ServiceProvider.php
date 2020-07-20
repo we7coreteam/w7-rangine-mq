@@ -47,6 +47,8 @@ class ServiceProvider extends ProviderAbstract {
 		$event = $this->container->singleton(ServerEvent::class);
 		$this->registerServerEvent('mq', $event->getDefaultEvent()[ServerEnum::TYPE_PROCESS]);
 
+		$this->registerCommand();
+
 		$this->registerManager();
 		$this->registerConnection();
 		$this->registerFailedJobServices();
