@@ -1,8 +1,17 @@
 <?php
 
+/**
+ * Rangine MQ
+ *
+ * (c) We7Team 2019 <https://www.rangine.com>
+ *
+ * document http://s.w7.cc/index.php?c=wiki&do=view&id=317&list=2284
+ *
+ * visited https://www.rangine.com for more details
+ */
+
 namespace W7\Mq\Consumer;
 
-use Illuminate\Database\DetectsLostConnections;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
@@ -37,30 +46,17 @@ class ConsumerAbstract {
 	protected $exceptions;
 
 	/**
-	 * The callback used to determine if the application is in maintenance mode.
-	 *
-	 * @var callable
-	 */
-	protected $isDownForMaintenance;
-
-	/**
 	 * Create a new queue worker.
 	 *
 	 * @param  QueueManager  $manager
 	 * @param  EventDispatcherInterface  $events
 	 * @param  ExceptionHandler  $exceptions
-	 * @param  callable  $isDownForMaintenance
 	 * @return void
 	 */
-	public function __construct(QueueManager $manager,
-								EventDispatcherInterface $events,
-								ExceptionHandler $exceptions,
-								callable $isDownForMaintenance)
-	{
+	public function __construct(QueueManager $manager, EventDispatcherInterface $events, ExceptionHandler $exceptions) {
 		$this->events = $events;
 		$this->manager = $manager;
 		$this->exceptions = $exceptions;
-		$this->isDownForMaintenance = $isDownForMaintenance;
 	}
 
 	/**
@@ -77,7 +73,8 @@ class ConsumerAbstract {
 			// register the timeout handler and reset the alarm for this job so it is
 			// not stuck in a frozen state forever. Then, we can fire off this job.
 			$job = $this->getNextJob(
-				$this->manager->connection($connectionName), $queue
+				$this->manager->connection($connectionName),
+				$queue
 			);
 
 			$timerId = $this->registerTimeoutHandler($job, $options);
@@ -98,13 +95,16 @@ class ConsumerAbstract {
 	 *
 	 * @param  \Illuminate\Contracts\Queue\Job|null  $job
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
-	 * @return void
+	 * @return mixed
 	 */
 	protected function registerTimeoutHandler($job, WorkerOptions $options) {
 		return itimeTick(max($this->timeoutForJob($job, $options), 0), function () use ($job, $options) {
 			if ($job) {
 				$this->markJobAsFailedIfWillExceedMaxAttempts(
-					$job->getConnectionName(), $job, (int) $options->maxTries, $this->maxAttemptsExceededException($job)
+					$job->getConnectionName(),
+					$job,
+					(int) $options->maxTries,
+					$this->maxAttemptsExceededException($job)
 				);
 			}
 		});
@@ -139,7 +139,8 @@ class ConsumerAbstract {
 	 */
 	public function runNextJob($connectionName, $queue, WorkerOptions $options) {
 		$job = $this->getNextJob(
-			$this->manager->connection($connectionName), $queue
+			$this->manager->connection($connectionName),
+			$queue
 		);
 
 		// If we're able to pull a job off of the stack, we will process it and then return
@@ -157,7 +158,7 @@ class ConsumerAbstract {
 	 * @param  string  $queue
 	 * @return \Illuminate\Contracts\Queue\Job|null
 	 */
-	protected function getNextJob($connection, $queue){
+	protected function getNextJob($connection, $queue) {
 		try {
 			foreach (explode(',', $queue) as $queue) {
 				if (! is_null($job = $connection->pop($queue))) {
@@ -177,7 +178,7 @@ class ConsumerAbstract {
 	 * @param  \Illuminate\Queue\WorkerOptions  $options
 	 * @return void
 	 */
-	protected function runJob($job, $connectionName, WorkerOptions $options){
+	protected function runJob($job, $connectionName, WorkerOptions $options) {
 		try {
 			return $this->process($connectionName, $job, $options);
 		} catch (\Throwable $e) {
@@ -195,7 +196,7 @@ class ConsumerAbstract {
 	 *
 	 * @throws \Throwable
 	 */
-	public function process($connectionName, $job, WorkerOptions $options){
+	public function process($connectionName, $job, WorkerOptions $options) {
 		try {
 			// First we will raise the before job event and determine if the job has already ran
 			// over its maximum attempt limits, which could primarily happen when this job is
@@ -203,7 +204,9 @@ class ConsumerAbstract {
 			$this->raiseBeforeJobEvent($connectionName, $job);
 
 			$this->markJobAsFailedIfAlreadyExceedsMaxAttempts(
-				$connectionName, $job, (int) $options->maxTries
+				$connectionName,
+				$job,
+				(int) $options->maxTries
 			);
 
 			if ($job->isDeleted()) {
@@ -220,7 +223,10 @@ class ConsumerAbstract {
 			$this->handleJobException($connectionName, $job, $options, $e);
 		} catch (\Throwable $e) {
 			$this->handleJobException(
-				$connectionName, $job, $options, $e
+				$connectionName,
+				$job,
+				$options,
+				$e
 			);
 		}
 	}
@@ -243,12 +249,17 @@ class ConsumerAbstract {
 			// go ahead and mark it as failed now so we do not have to release this again.
 			if (! $job->hasFailed()) {
 				$this->markJobAsFailedIfWillExceedMaxAttempts(
-					$connectionName, $job, (int) $options->maxTries, $e
+					$connectionName,
+					$job,
+					(int) $options->maxTries,
+					$e
 				);
 			}
 
 			$this->raiseExceptionOccurredJobEvent(
-				$connectionName, $job, $e
+				$connectionName,
+				$job,
+				$e
 			);
 		} finally {
 			// If we catch an exception, we will attempt to release the job back onto the queue
@@ -335,7 +346,8 @@ class ConsumerAbstract {
 	 */
 	protected function raiseBeforeJobEvent($connectionName, $job) {
 		$this->events->dispatch(new JobProcessing(
-			$connectionName, $job
+			$connectionName,
+			$job
 		));
 	}
 
@@ -348,7 +360,8 @@ class ConsumerAbstract {
 	 */
 	protected function raiseAfterJobEvent($connectionName, $job) {
 		$this->events->dispatch(new JobProcessed(
-			$connectionName, $job
+			$connectionName,
+			$job
 		));
 	}
 
@@ -362,7 +375,9 @@ class ConsumerAbstract {
 	 */
 	protected function raiseExceptionOccurredJobEvent($connectionName, $job, $e) {
 		$this->events->dispatch(new JobExceptionOccurred(
-			$connectionName, $job, $e
+			$connectionName,
+			$job,
+			$e
 		));
 	}
 
@@ -383,8 +398,7 @@ class ConsumerAbstract {
 	 *
 	 * @return QueueManager
 	 */
-	public function getManager()
-	{
+	public function getManager() {
 		return $this->manager;
 	}
 
@@ -394,8 +408,7 @@ class ConsumerAbstract {
 	 * @param  QueueManager  $manager
 	 * @return void
 	 */
-	public function setManager(QueueManager $manager)
-	{
+	public function setManager(QueueManager $manager) {
 		$this->manager = $manager;
 	}
 }

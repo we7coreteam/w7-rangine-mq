@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Rangine MQ
+ *
+ * (c) We7Team 2019 <https://www.rangine.com>
+ *
+ * document http://s.w7.cc/index.php?c=wiki&do=view&id=317&list=2284
+ *
+ * visited https://www.rangine.com for more details
+ */
+
 namespace W7\Mq;
 
 use Illuminate\Container\Container;
@@ -43,8 +53,7 @@ class ServiceProvider extends ProviderAbstract {
 	 *
 	 * @return void
 	 */
-	protected function registerConnection()
-	{
+	protected function registerConnection() {
 		$this->container->set('queue.connection', function () {
 			return $this->container->singleton('queue')->connection();
 		});
@@ -56,8 +65,7 @@ class ServiceProvider extends ProviderAbstract {
 	 * @param  \Illuminate\Queue\QueueManager  $manager
 	 * @return void
 	 */
-	public function registerConnectors($manager)
-	{
+	public function registerConnectors($manager) {
 		foreach (['Database', 'Redis'] as $connector) {
 			$this->{"register{$connector}Connector"}($manager);
 		}
@@ -69,8 +77,7 @@ class ServiceProvider extends ProviderAbstract {
 	 * @param  \Illuminate\Queue\QueueManager  $manager
 	 * @return void
 	 */
-	protected function registerDatabaseConnector($manager)
-	{
+	protected function registerDatabaseConnector($manager) {
 		$manager->addConnector('database', function () {
 			return new DatabaseConnector($this->container->get(ConnectionResolver::class));
 		});
@@ -82,8 +89,7 @@ class ServiceProvider extends ProviderAbstract {
 	 * @param  \Illuminate\Queue\QueueManager  $manager
 	 * @return void
 	 */
-	protected function registerRedisConnector($manager)
-	{
+	protected function registerRedisConnector($manager) {
 		$manager->addConnector('redis', function () {
 			return new RedisConnector($this->app['redis']);
 		});
@@ -94,8 +100,7 @@ class ServiceProvider extends ProviderAbstract {
 	 *
 	 * @return void
 	 */
-	protected function registerFailedJobServices()
-	{
+	protected function registerFailedJobServices() {
 		$this->container->set('queue.failer', function () {
 			$config = $this->config->get('queue.failed', []);
 
@@ -113,10 +118,11 @@ class ServiceProvider extends ProviderAbstract {
 	 * @param  array  $config
 	 * @return \Illuminate\Queue\Failed\DatabaseFailedJobProvider
 	 */
-	protected function databaseFailedJobProvider($config)
-	{
+	protected function databaseFailedJobProvider($config) {
 		return new DatabaseFailedJobProvider(
-			$this->container->get(ConnectionResolver::class), $config['database'], $config['table']
+			$this->container->get(ConnectionResolver::class),
+			$config['database'],
+			$config['table']
 		);
 	}
 
@@ -125,8 +131,7 @@ class ServiceProvider extends ProviderAbstract {
 	 *
 	 * @return array
 	 */
-	public function provides()
-	{
+	public function provides() {
 		return [
 			'queue', 'queue.failer', 'queue.connection',
 		];
