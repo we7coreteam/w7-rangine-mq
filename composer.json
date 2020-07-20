@@ -11,6 +11,7 @@
     "php": ">=7.1.0",
     "w7/rangine": "*",
     "illuminate/queue": "~6.0",
+    "illuminate/bus": "~6.0",
     "vladimir-yuldashev/laravel-queue-rabbitmq": "^10.2"
   },
   "require-dev": {
