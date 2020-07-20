@@ -85,6 +85,10 @@ class RabbitMQConsumer extends ConsumerAbstract {
 					$queue
 				);
 
+				if (!$job) {
+					return;
+				}
+
 				$timerId = $this->registerTimeoutHandler($job, $options);
 
 				// If we're able to pull a job off of the stack, we will process it and then return
