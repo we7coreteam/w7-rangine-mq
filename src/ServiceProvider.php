@@ -13,11 +13,16 @@
 namespace W7\Mq;
 
 use Illuminate\Container\Container;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Failed\DatabaseFailedJobProvider;
 use Illuminate\Queue\Failed\NullFailedJobProvider;
 use W7\Core\Database\ConnectionResolver;
 use W7\Core\Events\Dispatcher;
 use W7\Core\Exception\HandlerExceptions;
+use W7\Core\Facades\Event;
 use W7\Core\Provider\ProviderAbstract;
 use W7\Core\Server\ServerEnum;
 use W7\Core\Server\ServerEvent;
@@ -27,6 +32,10 @@ use W7\Mq\Connector\RedisConnector;
 use W7\Mq\Consumer\DatabaseMQConsumer;
 use W7\Mq\Consumer\RabbitMQConsumer;
 use W7\Mq\Consumer\RedisMQConsumer;
+use W7\Mq\Event\JobExceptionOccurredEvent;
+use W7\Mq\Event\JobFailedEvent;
+use W7\Mq\Event\JobProcessedEvent;
+use W7\Mq\Event\JobProcessingEvent;
 use W7\Mq\Server\Server;
 
 class ServiceProvider extends ProviderAbstract {
@@ -41,6 +50,7 @@ class ServiceProvider extends ProviderAbstract {
 		$this->registerManager();
 		$this->registerConnection();
 		$this->registerFailedJobServices();
+		$this->registerEventListener();
 	}
 
 	/**
@@ -165,6 +175,14 @@ class ServiceProvider extends ProviderAbstract {
 				return new NullFailedJobProvider;
 			}
 		});
+
+		/**
+		 * @var Container $container
+		 */
+		$container = $this->container->get(Container::class);
+		$container->singleton('queue.failer', function () {
+			return $this->container->singleton('queue.failer');
+		});
 	}
 
 	/**
@@ -178,6 +196,55 @@ class ServiceProvider extends ProviderAbstract {
 			$this->container->get(ConnectionResolver::class),
 			$config['database'],
 			$config['table']
+		);
+	}
+
+	/**
+	 * Listen for the queue events in order to update the console output.
+	 *
+	 * @return void
+	 */
+	protected function registerEventListener() {
+		$this->registerEvent(JobFailed::class, function ($event) {
+			/**
+			 * @var JobFailed $event
+			 */
+			Event::dispatch(new JobFailedEvent($event->connectionName, $event->job, $event->exception));
+
+			$this->logFailedJob($event);
+		});
+		$this->registerEvent(JobProcessing::class, function ($event) {
+			/**
+			 * @var JobProcessing $event
+			 */
+			Event::dispatch(new JobProcessingEvent($event->connectionName, $event->job));
+		});
+		$this->registerEvent(JobProcessed::class, function ($event) {
+			/**
+			 * @var JobProcessed $event
+			 */
+			Event::dispatch(new JobProcessedEvent($event->connectionName, $event->job));
+		});
+		$this->registerEvent(JobExceptionOccurred::class, function ($event) {
+			/**
+			 * @var JobExceptionOccurred $event
+			 */
+			Event::dispatch(new JobExceptionOccurredEvent($event->connectionName, $event->job, $event->exception));
+		});
+	}
+
+	/**
+	 * Store a failed job event.
+	 *
+	 * @param  \Illuminate\Queue\Events\JobFailed  $event
+	 * @return void
+	 */
+	protected function logFailedJob(JobFailed $event) {
+		$this->container->singleton('queue.failer')->log(
+			$event->connectionName,
+			$event->job->getQueue(),
+			$event->job->getRawBody(),
+			$event->exception
 		);
 	}
 
