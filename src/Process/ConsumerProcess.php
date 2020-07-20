@@ -24,6 +24,10 @@ class ConsumerProcess extends ProcessAbstract {
 		return true;
 	}
 
+	public function getProcessName() {
+		return parent::getProcessName() . ' mq';
+	}
+
 	protected function run(Process $process) {
 		$config = Config::get('queue.connections.' . $this->getName(), []);
 		/**
