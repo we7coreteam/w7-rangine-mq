@@ -1,13 +1,25 @@
 <?php
 
+/**
+ * Rangine MQ
+ *
+ * (c) We7Team 2019 <https://www.rangine.com>
+ *
+ * document http://s.w7.cc/index.php?c=wiki&do=view&id=317&list=2284
+ *
+ * visited https://www.rangine.com for more details
+ */
+
 namespace W7\Mq\Facade;
 
 use W7\Core\Facades\FacadeAbstract;
+use W7\Mq\Queue\QueueInterface;
 
 /**
  * Class Queue
  * @package W7\Mq\Facade
  *
+ * @method static QueueInterface channel($name = '');
  * @method static int size($queue = null);
  * @method static mixed push($job, $data = '', $queue = null);
  * @method static mixed pushOn($queue, $job, $data = '');
@@ -20,7 +32,7 @@ use W7\Core\Facades\FacadeAbstract;
  * @method static \Illuminate\Contracts\Queue\Queue setConnectionName($name);
  */
 class Queue extends FacadeAbstract {
-	protected static function getFacadeAccessor(){
+	protected static function getFacadeAccessor() {
 		return 'queue';
 	}
 }
