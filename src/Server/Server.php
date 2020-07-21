@@ -40,7 +40,7 @@ class Server extends ProcessServerAbstract {
 
 		$this->setting['worker_num'] = $this->getWorkerNum();
 		if ($this->setting['worker_num'] == 0) {
-			throw new \RuntimeException('the list of started mq is empty, please check the configuration in config/queue.php');
+			throw new \RuntimeException('the list of started queue is empty, please check the configuration in config/queue.php');
 		}
 
 		return parent::checkSetting();
