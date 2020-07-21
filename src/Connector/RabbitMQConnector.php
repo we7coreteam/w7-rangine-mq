@@ -13,20 +13,10 @@
 namespace W7\Mq\Connector;
 
 use PhpAmqpLib\Connection\AbstractConnection;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Connectors\RabbitMQConnector as RabbitMQConnectorAbstract;
 use W7\Mq\Queue\RabbitMQQueue;
 
 class RabbitMQConnector extends RabbitMQConnectorAbstract {
-	/**
-	 * @var EventDispatcherInterface
-	 */
-	protected $dispatcher;
-
-	public function __construct(EventDispatcherInterface $dispatcher) {
-		$this->dispatcher = $dispatcher;
-	}
-
 	/**
 	 * @param string $worker
 	 * @param AbstractConnection $connection

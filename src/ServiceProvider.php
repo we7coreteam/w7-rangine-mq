@@ -19,6 +19,7 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Failed\DatabaseFailedJobProvider;
 use Illuminate\Queue\Failed\NullFailedJobProvider;
+use W7\App;
 use W7\Core\Cache\CacheManager;
 use W7\Core\Database\ConnectionResolver;
 use W7\Core\Events\Dispatcher;
@@ -155,9 +156,9 @@ class ServiceProvider extends ProviderAbstract {
 		$manager->addConsumer('rabbit_mq', function ($options = []) use ($manager) {
 			$consumer = new RabbitMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
 			$consumer->setContainer($this->container->singleton(Container::class));
-			$consumer->setConsumerTag($options['customer_tag']);
-			$consumer->setPrefetchCount($options['prefetch_count']);
-			$consumer->setPrefetchSize($options['prefetch_size']);
+			$consumer->setConsumerTag($options['customer_tag'] ?? (App::NAME . '_' . getmypid()));
+			$consumer->setPrefetchCount($options['prefetch_count'] ?? 0);
+			$consumer->setPrefetchSize($options['prefetch_size'] ?? 0);
 
 			return $consumer;
 		});
