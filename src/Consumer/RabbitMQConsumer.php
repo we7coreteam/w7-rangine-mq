@@ -18,7 +18,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
 use Throwable;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Jobs\RabbitMQJob;
-use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue;
+use W7\Mq\Queue\RabbitMQQueue;
 
 class RabbitMQConsumer extends ConsumerAbstract {
 	/** @var Container */
@@ -59,6 +59,12 @@ class RabbitMQConsumer extends ConsumerAbstract {
 		/** @var RabbitMQQueue $connection */
 		$connection = $this->manager->connection($connectionName);
 
+		//Direct模式,可以使用rabbitMQ自带的Exchange：default Exchange 。所以不需要将Exchange进行任何绑定(binding)操作 。消息传递时，RouteKey必须完全匹配，才会被队列接收，否则该消息会被抛弃
+		//如果声明了exchange,需要进行绑定,Fanout模式不需要
+		if ($connection->getExchange()) {
+			$connection->bindQueue($queue, $connection->getExchange(), $connection->getRoutingKey($queue));
+		}
+
 		$this->channel = $connection->getChannel();
 
 		$this->channel->basic_qos(
@@ -75,8 +81,6 @@ class RabbitMQConsumer extends ConsumerAbstract {
 			false,
 			false,
 			function (AMQPMessage $message) use ($connection, $options, $connectionName, $queue): void {
-				$this->gotJob = true;
-
 				$job = new RabbitMQJob(
 					$this->container,
 					$connection,
