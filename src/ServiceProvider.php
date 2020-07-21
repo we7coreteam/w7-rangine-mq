@@ -19,6 +19,7 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Failed\DatabaseFailedJobProvider;
 use Illuminate\Queue\Failed\NullFailedJobProvider;
+use W7\Core\Cache\CacheManager;
 use W7\Core\Database\ConnectionResolver;
 use W7\Core\Events\Dispatcher;
 use W7\Core\Exception\HandlerExceptions;
@@ -134,7 +135,7 @@ class ServiceProvider extends ProviderAbstract {
 	 */
 	protected function registerRedisConnectorAndConsumer($manager) {
 		$manager->addConnector('redis', function () {
-			return new RedisConnector($this->app['redis']);
+			return new RedisConnector($this->container->get(CacheManager::class));
 		});
 		$manager->addConsumer('redis', function ($options = []) use ($manager) {
 			return new RedisMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
