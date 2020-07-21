@@ -10,7 +10,7 @@
  * visited https://www.rangine.com for more details
  */
 
-namespace W7\Mq\Command\Mq;
+namespace W7\Mq\Command\Queue;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
