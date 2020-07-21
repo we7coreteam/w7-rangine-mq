@@ -66,8 +66,9 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 				Context::setContextDataByKey($contextName, $connection);
 			} finally {
 				if ($connection && isCo()) {
-					defer(function () use ($connection) {
+					defer(function () use ($connection, $contextName) {
 						$this->releaseConnection($connection);
+						Context::setContextDataByKey($contextName, null);
 					});
 				}
 			}
