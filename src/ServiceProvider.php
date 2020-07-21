@@ -156,7 +156,7 @@ class ServiceProvider extends ProviderAbstract {
 		$manager->addConsumer('rabbit_mq', function ($options = []) use ($manager) {
 			$consumer = new RabbitMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
 			$consumer->setContainer($this->container->singleton(Container::class));
-			$consumer->setConsumerTag($options['customer_tag'] ?? (App::NAME . '_' . getmypid()));
+			$consumer->setConsumerTag($options['customer_tag'] ?? (App::NAME . '_' . microtime(true) . '_' . getmypid()));
 			$consumer->setPrefetchCount($options['prefetch_count'] ?? 0);
 			$consumer->setPrefetchSize($options['prefetch_size'] ?? 0);
 
