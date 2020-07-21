@@ -16,6 +16,7 @@ use Illuminate\Contracts\Queue\Queue;
 use InvalidArgumentException;
 use W7\Core\Facades\Context;
 use W7\Mq\Consumer\ConsumerAbstract;
+use W7\Mq\Queue\QueueInterface;
 
 /**
  * @mixin \Illuminate\Contracts\Queue\Queue
@@ -66,8 +67,9 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 				Context::setContextDataByKey($contextName, $connection);
 			} finally {
 				if ($connection && isCo()) {
-					defer(function () use ($connection) {
+					defer(function () use ($connection, $contextName) {
 						$this->releaseConnection($connection);
+						Context::setContextDataByKey($contextName, null);
 					});
 				}
 			}
@@ -82,5 +84,9 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 
 	private function getContextKey($name): string {
 		return sprintf('mq.connection.%s', $name);
+	}
+
+	public function channel($name = '') : QueueInterface {
+		return $this->connection($name);
 	}
 }
