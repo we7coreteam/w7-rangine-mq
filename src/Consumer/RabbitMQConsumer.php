@@ -104,7 +104,7 @@ class RabbitMQConsumer extends ConsumerAbstract {
 
 		while ($this->channel->is_consuming()) {
 			try {
-				$this->channel->wait(null, true, (int) $options->timeout);
+				$this->channel->wait();
 			} catch (Throwable $exception) {
 				$this->exceptions->report($exception);
 			}
