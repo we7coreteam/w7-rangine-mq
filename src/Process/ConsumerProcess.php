@@ -29,13 +29,14 @@ class ConsumerProcess extends ProcessAbstract {
 	}
 
 	protected function run(Process $process) {
-		$config = Config::get('queue.connections.' . $this->getName(), []);
 		/**
 		 * @var QueueManager $queueManager
 		 */
 		$queueManager = Container::singleton('queue');
-		$consumer = $queueManager->getConsumer($this->getName());
-		$consumer->consume($this->getName(), $config['queue'], new WorkerOptions(
+		$config = Config::get('queue.queue.' . $this->getName());
+		$consumer = $queueManager->getConsumer($config['connection']);
+
+		$consumer->consume($config['connection'], $this->getName(), new WorkerOptions(
 			$config['delay'] ?? 0,
 			$config['memory'] ?? 128,
 			$config['timeout'] ?? 60,

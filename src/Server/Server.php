@@ -26,17 +26,17 @@ class Server extends ProcessServerAbstract {
 	}
 
 	public function getType() {
-		return 'mq';
+		return 'queue';
 	}
 
 	protected function checkSetting() {
-		$connections = Config::get('queue.connections', []);
-		foreach ($connections as &$connection) {
+		$queues = Config::get('queue.queue', []);
+		foreach ($queues as &$queue) {
 			//如果是全部启动的话，enable和配置中的值保持一致
-			$connection['enable'] = $connection['enable'] ?? true;
+			$queue['enable'] = $queue['enable'] ?? true;
 		}
 
-		Config::set('queue.connections', $connections);
+		Config::set('queue.queue', $queues);
 
 		$this->setting['worker_num'] = $this->getWorkerNum();
 		if ($this->setting['worker_num'] == 0) {
@@ -48,24 +48,24 @@ class Server extends ProcessServerAbstract {
 
 	private function getWorkerNum() {
 		$workerNum = 0;
-		$connections = Config::get('queue.connections', []);
-		foreach ($connections as $name => $connection) {
-			if (empty($connection['enable'])) {
+		$queues = Config::get('queue.queue', []);
+		foreach ($queues as $name => $queue) {
+			if (empty($queue['enable'])) {
 				continue;
 			}
-			$workerNum += $connection['worker_num'] ?? 1;
+			$workerNum += $queue['worker_num'] ?? 1;
 		}
 
 		return $workerNum;
 	}
 
 	protected function register() {
-		$connections = Config::get('queue.connections', []);
-		foreach ($connections as $name => $connection) {
-			if (empty($connection['enable'])) {
+		$queues = Config::get('queue.queue', []);
+		foreach ($queues as $name => $queue) {
+			if (empty($queue['enable'])) {
 				continue;
 			}
-			$this->pool->registerProcess($name, ConsumerProcess::class, $connection['worker_num'] ?? 1);
+			$this->pool->registerProcess($name, ConsumerProcess::class, $queue['worker_num'] ?? 1);
 		}
 	}
 }

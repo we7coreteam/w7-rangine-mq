@@ -84,4 +84,8 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 	private function getContextKey($name): string {
 		return sprintf('mq.connection.%s', $name);
 	}
+
+	public function channel($name = '') {
+		return $this->connection($name);
+	}
 }
