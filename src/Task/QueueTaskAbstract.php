@@ -12,12 +12,16 @@
 
 namespace W7\Mq\Task;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\InteractsWithQueue;
 use W7\App;
 use W7\Core\Facades\Container;
 use W7\Core\Facades\Context;
 use W7\Core\Task\TaskAbstract;
 
 abstract class QueueTaskAbstract extends TaskAbstract {
+	use InteractsWithQueue, Queueable;
+
 	protected $data;
 
 	public function __construct($data = []) {
