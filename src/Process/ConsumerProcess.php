@@ -29,6 +29,8 @@ class ConsumerProcess extends ProcessAbstract {
 	}
 
 	protected function run(Process $process) {
+		Container::set('worker_id', $this->getWorkerId());
+
 		/**
 		 * @var QueueManager $queueManager
 		 */
