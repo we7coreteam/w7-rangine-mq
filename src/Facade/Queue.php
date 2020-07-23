@@ -20,6 +20,7 @@ use W7\Mq\Queue\QueueInterface;
  * @package W7\Mq\Facade
  *
  * @method static QueueInterface channel($name = '');
+ * @method static pushData($data);
  * @method static int size($queue = null);
  * @method static mixed push($job, $data = '', $queue = null);
  * @method static mixed pushOn($queue, $job, $data = '');

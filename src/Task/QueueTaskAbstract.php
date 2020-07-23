@@ -20,7 +20,11 @@ use W7\Core\Task\TaskAbstract;
 abstract class QueueTaskAbstract extends TaskAbstract {
 	protected $data;
 
-	public function __construct($data) {
+	public function __construct($data = []) {
+		$this->data = $data;
+	}
+
+	public function setData($data) {
 		$this->data = $data;
 	}
 

@@ -12,11 +12,19 @@
 
 namespace W7\Mq\Connector;
 
+use Illuminate\Contracts\Queue\Queue;
 use PhpAmqpLib\Connection\AbstractConnection;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Connectors\RabbitMQConnector as RabbitMQConnectorAbstract;
 use W7\Mq\Queue\RabbitMQQueue;
 
-class RabbitMQConnector extends RabbitMQConnectorAbstract {
+class RabbitMQConnector extends RabbitMQConnectorAbstract implements ConnectorInterface {
+	public function connect(array $config): Queue {
+		$queue = parent::connect($config);
+		$queue->setDefaultHandler($config['class'] ?? '');
+
+		return $queue;
+	}
+
 	/**
 	 * @param string $worker
 	 * @param AbstractConnection $connection
