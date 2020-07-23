@@ -12,7 +12,6 @@
 
 namespace W7\Mq\Queue;
 
-use Illuminate\Support\Arr;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue as RabbitMQQueueAbstract;
 
 class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
@@ -24,10 +23,10 @@ class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
 	 * @return string
 	 */
 	public function getRoutingKey(string $destination): string {
-		return ltrim(sprintf(Arr::get($this->options, 'exchange_routing_key') ?: '%s', $destination), '.');
+		return parent::getRoutingKey($destination);
 	}
 
 	public function getExchange(string $exchange = null): ?string {
-		return $exchange ?: Arr::get($this->options, 'exchange') ?: null;
+		return parent::getExchange($exchange);
 	}
 }
