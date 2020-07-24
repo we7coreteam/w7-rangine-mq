@@ -83,9 +83,6 @@ class ServiceProvider extends ProviderAbstract {
 			$container->singleton(\Illuminate\Contracts\Events\Dispatcher::class, function () {
 				return $this->container->get(Dispatcher::class);
 			});
-			$container->singleton(\Illuminate\Contracts\Container\Container::class, function () use ($container) {
-				return $container;
-			});
 			$container->singleton(\Illuminate\Contracts\Bus\Dispatcher::class, function () use ($container, $manager) {
 				return new \Illuminate\Bus\Dispatcher($container, function ($connection = null) use ($manager) {
 					return $manager->connection($connection);
