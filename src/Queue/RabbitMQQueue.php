@@ -12,10 +12,12 @@
 
 namespace W7\Mq\Queue;
 
-use Illuminate\Support\Arr;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue as RabbitMQQueueAbstract;
+use W7\Mq\Task\QueueTaskAbstract;
 
 class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
+	protected $defaultHandler;
+
 	/**
 	 * Get the routing-key for when you use exchanges
 	 * The default routing-key is the given destination.
@@ -24,10 +26,34 @@ class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
 	 * @return string
 	 */
 	public function getRoutingKey(string $destination): string {
-		return ltrim(sprintf(Arr::get($this->options, 'exchange_routing_key') ?: '%s', $destination), '.');
+		return parent::getRoutingKey($destination);
 	}
 
 	public function getExchange(string $exchange = null): ?string {
-		return $exchange ?: Arr::get($this->options, 'exchange') ?: null;
+		return parent::getExchange($exchange);
+	}
+
+	public function setDefaultHandler(string $handlerClass) {
+		$this->defaultHandler = $handlerClass;
+	}
+
+	public function getDefaultHandler(): QueueTaskAbstract {
+		if ($this->defaultHandler) {
+			$handler = $this->defaultHandler;
+			return new $handler();
+		}
+
+		return null;
+	}
+
+	public function pushData($data) {
+		$handler = $this->getDefaultHandler();
+		if (!$handler) {
+			throw new \RuntimeException('default queue handler is empty, ');
+		}
+
+		$handler->setData($data);
+
+		$this->push($handler, '', $this->default);
 	}
 }

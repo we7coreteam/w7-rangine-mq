@@ -12,14 +12,13 @@
 
 namespace W7\Mq;
 
-use Illuminate\Contracts\Queue\Queue;
 use InvalidArgumentException;
 use W7\Core\Facades\Context;
 use W7\Mq\Consumer\ConsumerAbstract;
 use W7\Mq\Queue\QueueInterface;
 
 /**
- * @mixin \Illuminate\Contracts\Queue\Queue
+ * @mixin QueueInterface
  */
 class QueueManager extends \Illuminate\Queue\QueueManager {
 	protected $consumers = [];
@@ -50,20 +49,23 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 	 * Resolve a queue connection instance.
 	 *
 	 * @param  string|null  $name
-	 * @return Queue
+	 * @return QueueInterface
 	 */
 	public function connection($name = null) {
 		$name = $name ?: $this->getDefaultDriver();
 		$contextName = $this->getContextKey($name);
 		$connection = Context::getContextDataByKey($contextName);
 
-		if (! $connection instanceof Queue) {
+		if (! $connection instanceof QueueInterface) {
 			try {
 				/**
-				 * @var Queue $connection
+				 * @var QueueInterface $connection
 				 */
 				$connection = $this->resolve($name);
-				$connection->setContainer($this->app);
+				if (method_exists($connection, 'setContainer')) {
+					$connection->setContainer($this->app);
+				}
+
 				Context::setContextDataByKey($contextName, $connection);
 			} finally {
 				if ($connection && isCo()) {
