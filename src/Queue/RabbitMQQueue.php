@@ -13,7 +13,6 @@
 namespace W7\Mq\Queue;
 
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue as RabbitMQQueueAbstract;
-use W7\Mq\Task\QueueTaskAbstract;
 
 class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
 	protected $defaultHandler;
@@ -31,26 +30,5 @@ class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
 
 	public function getExchange(string $exchange = null): ?string {
 		return parent::getExchange($exchange);
-	}
-
-	public function setDefaultHandler(string $handlerClass) {
-		$this->defaultHandler = $handlerClass;
-	}
-
-	public function getDefaultHandler(): QueueTaskAbstract {
-		if ($this->defaultHandler) {
-			$handler = $this->defaultHandler;
-			return new $handler();
-		}
-
-		throw new \RuntimeException('default queue handler is empty');
-	}
-
-	public function pushData($data) {
-		$handler = $this->getDefaultHandler();
-
-		$handler->setData($data);
-
-		$this->push($handler, '', $this->default);
 	}
 }

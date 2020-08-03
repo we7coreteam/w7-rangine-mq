@@ -32,9 +32,6 @@ class Server extends ProcessServerAbstract {
 	protected function checkSetting() {
 		$queues = Config::get('queue.queue', []);
 		foreach ($queues as $name => &$queue) {
-			if (empty($queue['class'])) {
-				throw new \RuntimeException('queue ' . $name . ' config error : class, please check the configuration in config/queue.php');
-			}
 			//如果是全部启动的话，enable和配置中的值保持一致
 			$queue['enable'] = $queue['enable'] ?? true;
 		}

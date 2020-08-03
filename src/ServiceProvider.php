@@ -59,21 +59,12 @@ class ServiceProvider extends ProviderAbstract {
 	 */
 	protected function registerManager() {
 		$this->container->set('queue', function () {
-			$defaultConnection = $this->config->get('queue.default_connection', 'rabbit_mq');
-
-			$connectionsConfig = $this->config->get('queue.connections', []);
 			$queueConfig = $this->config->get('queue.queue', []);
-			foreach ($queueConfig as $name => &$item) {
-				$item['connection'] = $item['connection'] ?? $defaultConnection;
-				$item = array_merge($item, $connectionsConfig[$item['connection']] ?? []);
-				$item['queue'] = $name;
-			}
-
 			/**
 			 * @var Container $container
 			 */
 			$container = $this->container->get(Container::class);
-			$container['config']['queue.default'] = $this->config->get('queue.default', 'default');
+			$container['config']['queue.default'] = $this->config->get('queue.default', 'rabbit_mq');
 			$container['config']['queue.connections'] = $queueConfig;
 			$this->config->set('queue.queue', $queueConfig);
 
