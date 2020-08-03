@@ -64,8 +64,8 @@ class ServiceProvider extends ProviderAbstract {
 			$connectionsConfig = $this->config->get('queue.connections', []);
 			$queueConfig = $this->config->get('queue.queue', []);
 			foreach ($queueConfig as $name => &$item) {
-				$item['connection_name'] = $item['connection_name'] ?? $defaultConnection;
-				$item = array_merge($item, $connectionsConfig[$item['connection_name']] ?? []);
+				$item['connection'] = $item['connection'] ?? $defaultConnection;
+				$item = array_merge($item, $connectionsConfig[$item['connection']] ?? []);
 				$item['queue'] = $name;
 			}
 
