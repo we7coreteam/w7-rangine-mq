@@ -43,14 +43,11 @@ class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
 			return new $handler();
 		}
 
-		return null;
+		throw new \RuntimeException('default queue handler is empty');
 	}
 
 	public function pushData($data) {
 		$handler = $this->getDefaultHandler();
-		if (!$handler) {
-			throw new \RuntimeException('default queue handler is empty, ');
-		}
 
 		$handler->setData($data);
 
