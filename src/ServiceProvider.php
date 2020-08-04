@@ -20,7 +20,9 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Failed\DatabaseFailedJobProvider;
 use Illuminate\Queue\Failed\NullFailedJobProvider;
 use W7\App;
+use W7\Console\Application;
 use W7\Core\Database\ConnectionResolver;
+use W7\Core\Task\TaskDispatcher;
 use W7\Core\Events\Dispatcher;
 use W7\Core\Exception\HandlerExceptions;
 use W7\Core\Facades\Event;
@@ -215,14 +217,7 @@ class ServiceProvider extends ProviderAbstract {
 		);
 	}
 
-	/**
-	 * Get the services provided by the provider.
-	 *
-	 * @return array
-	 */
-	public function provides() {
-		return [
-			'queue', 'queue.failer', 'queue.connection',
-		];
+	public function providers(): array {
+		return ['queue', 'queue.failer', 'queue.connection', Application::class, TaskDispatcher::class];
 	}
 }
