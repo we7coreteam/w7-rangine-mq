@@ -66,7 +66,6 @@ class ServiceProvider extends ProviderAbstract {
 			$container = $this->container->get(Container::class);
 			$container['config']['queue.default'] = $this->config->get('queue.default', 'rabbit_mq');
 			$container['config']['queue.connections'] = $queueConfig;
-			$this->config->set('queue.queue', $queueConfig);
 
 			$manager = new QueueManager($container);
 			$this->registerConnectorAndConsumer($manager);
