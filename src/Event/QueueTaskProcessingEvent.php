@@ -14,5 +14,5 @@ namespace W7\Mq\Event;
 
 use Illuminate\Queue\Events\JobProcessing;
 
-class JobProcessingEvent extends JobProcessing {
+class QueueTaskProcessingEvent extends JobProcessing {
 }

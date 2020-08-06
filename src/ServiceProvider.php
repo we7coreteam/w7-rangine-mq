@@ -31,10 +31,10 @@ use W7\Core\Server\ServerEnum;
 use W7\Core\Server\ServerEvent;
 use W7\Mq\Connector\RabbitMQConnector;
 use W7\Mq\Consumer\RabbitMQConsumer;
-use W7\Mq\Event\JobExceptionOccurredEvent;
-use W7\Mq\Event\JobFailedEvent;
-use W7\Mq\Event\JobProcessedEvent;
-use W7\Mq\Event\JobProcessingEvent;
+use W7\Mq\Event\QueueTaskExceptionOccurredEvent;
+use W7\Mq\Event\QueueTaskFailedEvent;
+use W7\Mq\Event\QueueTaskProcessedEvent;
+use W7\Mq\Event\QueueTaskProcessingEvent;
 use W7\Mq\Server\Server;
 
 class ServiceProvider extends ProviderAbstract {
@@ -178,7 +178,7 @@ class ServiceProvider extends ProviderAbstract {
 			/**
 			 * @var JobFailed $event
 			 */
-			Event::dispatch(new JobFailedEvent($event->connectionName, $event->job, $event->exception));
+			Event::dispatch(new QueueTaskFailedEvent($event->connectionName, $event->job, $event->exception));
 
 			$this->logFailedJob($event);
 		});
@@ -186,19 +186,19 @@ class ServiceProvider extends ProviderAbstract {
 			/**
 			 * @var JobProcessing $event
 			 */
-			Event::dispatch(new JobProcessingEvent($event->connectionName, $event->job));
+			Event::dispatch(new QueueTaskProcessingEvent($event->connectionName, $event->job));
 		});
 		$this->registerEvent(JobProcessed::class, function ($event) {
 			/**
 			 * @var JobProcessed $event
 			 */
-			Event::dispatch(new JobProcessedEvent($event->connectionName, $event->job));
+			Event::dispatch(new QueueTaskProcessedEvent($event->connectionName, $event->job));
 		});
 		$this->registerEvent(JobExceptionOccurred::class, function ($event) {
 			/**
 			 * @var JobExceptionOccurred $event
 			 */
-			Event::dispatch(new JobExceptionOccurredEvent($event->connectionName, $event->job, $event->exception));
+			Event::dispatch(new QueueTaskExceptionOccurredEvent($event->connectionName, $event->job, $event->exception));
 		});
 	}
 

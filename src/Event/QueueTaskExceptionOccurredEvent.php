@@ -14,5 +14,5 @@ namespace W7\Mq\Event;
 
 use Illuminate\Queue\Events\JobExceptionOccurred;
 
-class JobExceptionOccurredEvent extends JobExceptionOccurred {
+class QueueTaskExceptionOccurredEvent extends JobExceptionOccurred {
 }

@@ -12,7 +12,7 @@
 
 namespace W7\Mq\Event;
 
-use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobFailed;
 
-class JobProcessedEvent extends JobProcessed {
+class QueueTaskFailedEvent extends JobFailed {
 }
