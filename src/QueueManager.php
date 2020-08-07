@@ -13,6 +13,7 @@
 namespace W7\Mq;
 
 use InvalidArgumentException;
+use Swoole\Coroutine;
 use W7\Core\Facades\Context;
 use W7\Mq\Consumer\ConsumerAbstract;
 use W7\Mq\Queue\QueueInterface;
@@ -69,7 +70,7 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 				Context::setContextDataByKey($contextName, $connection);
 			} finally {
 				if ($connection && isCo()) {
-					defer(function () use ($connection, $contextName) {
+					Coroutine::defer(function () use ($connection, $contextName) {
 						$this->releaseConnection($connection);
 						Context::setContextDataByKey($contextName, null);
 					});
