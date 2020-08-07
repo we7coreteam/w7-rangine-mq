@@ -72,14 +72,12 @@ abstract class ConsumerAbstract {
 	 */
 	protected function registerTimeoutHandler($job, WorkerOptions $options) {
 		return itimeTick(max($this->timeoutForJob($job, $options), 0), function () use ($job, $options) {
-			if ($job) {
-				$this->markJobAsFailedIfWillExceedMaxAttempts(
-					$job->getConnectionName(),
-					$job,
-					(int) $options->maxTries,
-					$this->maxAttemptsExceededException($job)
-				);
-			}
+			$this->markJobAsFailedIfWillExceedMaxAttempts(
+				$job->getConnectionName(),
+				$job,
+				(int) $options->maxTries,
+				$this->maxAttemptsExceededException($job)
+			);
 		});
 	}
 
