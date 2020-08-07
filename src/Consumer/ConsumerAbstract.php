@@ -71,7 +71,7 @@ abstract class ConsumerAbstract {
 	 * @return mixed
 	 */
 	protected function registerTimeoutHandler($job, WorkerOptions $options) {
-		return itimeTick(max($this->timeoutForJob($job, $options), 0), function () use ($job, $options) {
+		return itimeAfter(max($this->timeoutForJob($job, $options), 0), function () use ($job, $options) {
 			$this->markJobAsFailedIfWillExceedMaxAttempts(
 				$job->getConnectionName(),
 				$job,
@@ -85,7 +85,7 @@ abstract class ConsumerAbstract {
 	 * @param $timerId
 	 */
 	protected function resetTimeoutHandler($timerId) {
-		Timer::clear($timerId);
+		Timer::exists($timerId) && Timer::clear($timerId);
 	}
 
 	/**
