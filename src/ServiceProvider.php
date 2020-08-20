@@ -48,8 +48,8 @@ class ServiceProvider extends ProviderAbstract {
 
 		$this->registerCommand();
 
-		$this->registerManager();
-		$this->registerConnection();
+		$this->registerQueueManager();
+		$this->registerQueueConnection();
 		$this->registerFailedJobServices();
 		$this->registerEventListener();
 	}
@@ -59,7 +59,7 @@ class ServiceProvider extends ProviderAbstract {
 	 *
 	 * @return void
 	 */
-	protected function registerManager() {
+	protected function registerQueueManager() {
 		$this->container->set('queue', function () {
 			$queueConfig = $this->config->get('queue.queue', []);
 			/**
@@ -90,7 +90,7 @@ class ServiceProvider extends ProviderAbstract {
 	 *
 	 * @return void
 	 */
-	protected function registerConnection() {
+	protected function registerQueueConnection() {
 		$this->container->set('queue.connection', function () {
 			return $this->container->singleton('queue')->connection();
 		});
