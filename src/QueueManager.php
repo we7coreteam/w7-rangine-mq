@@ -26,6 +26,9 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 
 	protected function getConfig($name) {
 		if (! is_null($name) && $name !== 'null') {
+			if (empty($this->app['config']['queue.connections'][$name])) {
+				throw new \RuntimeException('queue connection ' . $name . ' not support, please check the configuration file at config/queue.php');
+			}
 			return $this->app['config']['queue.connections'][$name];
 		}
 
