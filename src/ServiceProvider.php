@@ -115,13 +115,19 @@ class ServiceProvider extends ProviderAbstract {
 	 * @return void
 	 */
 	protected function registerRabbitConnectorAndConsumer($manager) {
+		$this->container->set('rabbit-mq-server-tag-resolver', function () {
+			return function ($options) {
+				return $options['customer_tag'] ?? (App::NAME . '_' . microtime(true) . '_' . getmypid());
+			};
+		});
+
 		$manager->addConnector('rabbit_mq', function () {
 			return new RabbitMQConnector($this->container->singleton(Dispatcher::class));
 		});
 		$manager->addConsumer('rabbit_mq', function ($options = []) use ($manager) {
 			$consumer = new RabbitMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
 			$consumer->setContainer($this->container->singleton(Container::class));
-			$consumer->setConsumerTag($options['customer_tag'] ?? (App::NAME . '_' . microtime(true) . '_' . getmypid()));
+			$consumer->setConsumerTag($this->container->get('rabbit-mq-server-tag-resolver')($options));
 			$consumer->setPrefetchCount($options['prefetch_count'] ?? 0);
 			$consumer->setPrefetchSize($options['prefetch_size'] ?? 0);
 
