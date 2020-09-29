@@ -30,6 +30,7 @@ use W7\Mq\Queue\QueueInterface;
  * @method static \Illuminate\Contracts\Queue\Job|null pop($queue = null);
  * @method static string getConnectionName();
  * @method static \Illuminate\Contracts\Queue\Queue setConnectionName($name);
+ * @method static void createPayloadUsing($callback)
  */
 class Queue extends FacadeAbstract {
 	protected static function getFacadeAccessor() {
