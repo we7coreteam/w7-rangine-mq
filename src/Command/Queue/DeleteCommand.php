@@ -20,11 +20,13 @@ use W7\Core\Facades\Container;
 use W7\Mq\Queue\RabbitMQQueue;
 use W7\Mq\QueueManager;
 
-class BindCommand extends CommandAbstract {
-	protected $description = 'Bind queue to exchange';
+class DeleteCommand extends CommandAbstract {
+	protected $description = 'Declare queue';
 
 	protected function configure() {
 		$this->addOption('--queue', null, InputOption::VALUE_REQUIRED, 'the queue name');
+		$this->addOption('--unused', null, InputOption::VALUE_OPTIONAL, 'check if queue has no consumers', 0);
+		$this->addOption('--empty', null, InputOption::VALUE_OPTIONAL, 'check if queue is empty', 0);
 		parent::configure();
 	}
 
@@ -32,22 +34,33 @@ class BindCommand extends CommandAbstract {
 		if (empty($options['queue'])) {
 			throw new CommandException('the option queue not be empty');
 		}
+
+		$queueConfig = Config::get('queue.queue.' . $options['queue']);
+		$queueName = $queueConfig['queue'] ?? '';
+		if (empty($queueName)) {
+			throw new CommandException('queue name config missing, please check the configuration config/queue.php');
+		}
 		/**
 		 * @var QueueManager $queueManager
 		 */
 		$queueManager = Container::singleton('queue');
-		$queueConfig = Config::get('queue.queue.' . $options['queue']);
 		/**
 		 * @var RabbitMQQueue $queue
 		 */
 		$queue = $queueManager->connection($options['queue']);
 
-		$queue->bindQueue(
-			$queueConfig['queue'],
-			$queueConfig['options']['queue']['exchange'] ?? '',
-			$queue->getRoutingKey($options['queue'])
+		if (! $queue->isQueueExists($queueName)) {
+			$this->output->warning('Queue does not exist.');
+
+			return;
+		}
+
+		$queue->deleteQueue(
+			$queueName,
+			(bool) $options['unused'],
+			(bool) $options['empty']
 		);
 
-		$this->output->info('Queue bound to exchange successfully.');
+		$this->output->info('Queue deleted successfully.');
 	}
 }

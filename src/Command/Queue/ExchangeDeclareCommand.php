@@ -20,11 +20,14 @@ use W7\Core\Facades\Container;
 use W7\Mq\Queue\RabbitMQQueue;
 use W7\Mq\QueueManager;
 
-class BindCommand extends CommandAbstract {
-	protected $description = 'Bind queue to exchange';
+class ExchangeDeclareCommand extends CommandAbstract {
+	protected $description = 'Declare exchange';
 
 	protected function configure() {
 		$this->addOption('--queue', null, InputOption::VALUE_REQUIRED, 'the queue name');
+		$this->addOption('--type', null, InputOption::VALUE_OPTIONAL, 'the exchange type', 'direct');
+		$this->addOption('--durable', null, InputOption::VALUE_OPTIONAL, 'the queue durable', 1);
+		$this->addOption('--auto-delete', null, InputOption::VALUE_OPTIONAL, 'auto delete queue', 0);
 		parent::configure();
 	}
 
@@ -32,22 +35,33 @@ class BindCommand extends CommandAbstract {
 		if (empty($options['queue'])) {
 			throw new CommandException('the option queue not be empty');
 		}
+
+		$queueConfig = Config::get('queue.queue.' . $options['queue']);
+		$exchange = $queueConfig['options']['queue']['exchange'] ?? '';
+		if (empty($exchange)) {
+			throw new CommandException('queue exchange config missing, please check the configuration config/queue.php');
+		}
 		/**
 		 * @var QueueManager $queueManager
 		 */
 		$queueManager = Container::singleton('queue');
-		$queueConfig = Config::get('queue.queue.' . $options['queue']);
 		/**
 		 * @var RabbitMQQueue $queue
 		 */
 		$queue = $queueManager->connection($options['queue']);
+		if ($queue->isExchangeExists($exchange)) {
+			$this->output->warning('Exchange already exists.');
 
-		$queue->bindQueue(
-			$queueConfig['queue'],
-			$queueConfig['options']['queue']['exchange'] ?? '',
-			$queue->getRoutingKey($options['queue'])
+			return;
+		}
+
+		$queue->declareExchange(
+			$exchange,
+			$this->option('type'),
+			(bool) $options['durable'],
+			(bool) $options['auto-delete']
 		);
 
-		$this->output->info('Queue bound to exchange successfully.');
+		$this->output->info('Exchange declared successfully.');
 	}
 }
