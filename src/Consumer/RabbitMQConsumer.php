@@ -103,6 +103,7 @@ class RabbitMQConsumer extends ConsumerAbstract {
 				}
 
 				$this->resetTimeoutHandler($timerId);
+				$this->stopIfNecessary($options, time());
 			}
 		);
 

@@ -12,6 +12,7 @@
 
 namespace W7\Mq\Consumer;
 
+use Illuminate\Database\DetectsLostConnections;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
@@ -24,6 +25,8 @@ use W7\Core\Exception\Handler\ExceptionHandler;
 use W7\Mq\QueueManager;
 
 abstract class ConsumerAbstract {
+	use DetectsLostConnections;
+
 	/**
 	 * The queue manager instance.
 	 *
@@ -44,6 +47,13 @@ abstract class ConsumerAbstract {
 	 * @var ExceptionHandler
 	 */
 	protected $exceptions;
+
+	/**
+	 * Indicates if the worker should exit.
+	 *
+	 * @var bool
+	 */
+	public $shouldQuit = false;
 
 	/**
 	 * @param  QueueManager  $manager
@@ -123,6 +133,7 @@ abstract class ConsumerAbstract {
 		}
 
 		$this->resetTimeoutHandler($timerId);
+		$this->stopIfNecessary($options, time());
 	}
 
 	/**
@@ -139,6 +150,7 @@ abstract class ConsumerAbstract {
 			}
 		} catch (\Throwable $e) {
 			$this->exceptions->report($e);
+			$this->stopWorkerIfLostConnection($e);
 		}
 	}
 
@@ -150,9 +162,53 @@ abstract class ConsumerAbstract {
 	 */
 	protected function runJob($job, $connectionName, WorkerOptions $options) {
 		try {
-			return $this->process($connectionName, $job, $options);
+			$this->process($connectionName, $job, $options);
 		} catch (\Throwable $e) {
 			$this->exceptions->report($e);
+			$this->stopWorkerIfLostConnection($e);
+		}
+	}
+
+	/**
+	 * Stop the process if necessary.
+	 *
+	 * @param  \Illuminate\Queue\WorkerOptions  $options
+	 * @param  mixed  $job
+	 * @return void
+	 */
+	protected function stopIfNecessary(WorkerOptions $options, $job = null){
+		if ($this->shouldQuit) {
+			$this->stop();
+		} elseif ($this->memoryExceeded($options->memory)) {
+			$this->stop(12);
+		} elseif ($options->stopWhenEmpty && is_null($job)) {
+			$this->stop();
+		}
+	}
+
+	public function memoryExceeded($memoryLimit) {
+		return (memory_get_usage(true) / 1024 / 1024) >= $memoryLimit;
+	}
+
+	/**
+	 * Stop listening and bail out of the script.
+	 *
+	 * @param  int  $status
+	 * @return void
+	 */
+	public function stop($status = 0) {
+		exit($status);
+	}
+
+	/**
+	 * Stop the worker if we have lost connection to a database.
+	 *
+	 * @param  \Throwable  $e
+	 * @return void
+	 */
+	protected function stopWorkerIfLostConnection($e){
+		if ($this->causedByLostConnection($e)) {
+			$this->shouldQuit = true;
 		}
 	}
 
@@ -287,9 +343,9 @@ abstract class ConsumerAbstract {
 	}
 
 	/**
-	 * @param  \Illuminate\Contracts\Queue\Job  $job
-	 * @param  \Exception  $e
-	 * @return void
+	 * @param $job
+	 * @param $e
+	 * @return mixed
 	 */
 	protected function failJob($job, $e) {
 		return $job->fail($e);
