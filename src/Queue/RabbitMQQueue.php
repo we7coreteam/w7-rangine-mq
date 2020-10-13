@@ -32,4 +32,10 @@ class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
 	public function getExchange(string $exchange = null): ?string {
 		return parent::getExchange($exchange);
 	}
+
+	protected function createPayloadArray($job, $queue, $data = '') {
+		return is_object($job)
+			? $this->createObjectPayload($job, $queue)
+			: $this->createStringPayload($job, $queue, $data);
+	}
 }
