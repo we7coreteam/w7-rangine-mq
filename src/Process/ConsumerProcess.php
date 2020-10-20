@@ -42,7 +42,7 @@ class ConsumerProcess extends ProcessAbstract {
 			$config['delay'] ?? 0,
 			$config['memory'] ?? 128,
 			$config['timeout'] ?? 60,
-			$config['sleep'] ?? 3000,
+			$config['sleep'] ?? 3,
 			$config['tries'] ?? 1,
 			$config['force'] ?? false
 		));
