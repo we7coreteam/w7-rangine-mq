@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Swoole\Timer;
 use W7\Core\Exception\Handler\ExceptionHandler;
+use W7\Mq\Event\ConsumerExitEvent;
 use W7\Mq\QueueManager;
 
 abstract class ConsumerAbstract {
@@ -176,12 +177,14 @@ abstract class ConsumerAbstract {
 	 * @param  mixed  $job
 	 * @return void
 	 */
-	protected function stopIfNecessary(WorkerOptions $options, $job = null){
+	protected function stopIfNecessary(WorkerOptions $options, $job = null) {
 		if ($this->shouldQuit) {
 			$this->stop();
 		} elseif ($this->memoryExceeded($options->memory)) {
+			$this->events->dispatch(new ConsumerExitEvent('Exceeding memory limit ' . $options->memory, 12));
 			$this->stop(12);
 		} elseif ($options->stopWhenEmpty && is_null($job)) {
+			$this->events->dispatch(new ConsumerExitEvent('current queue is empty ', 0));
 			$this->stop();
 		}
 	}
@@ -206,8 +209,9 @@ abstract class ConsumerAbstract {
 	 * @param  \Throwable  $e
 	 * @return void
 	 */
-	protected function stopWorkerIfLostConnection($e){
+	protected function stopWorkerIfLostConnection($e) {
 		if ($this->causedByLostConnection($e)) {
+			$this->events->dispatch(new ConsumerExitEvent($e->getMessage(), 0));
 			$this->shouldQuit = true;
 		}
 	}
