@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use W7\DatabaseTool\Migrate\Migration;
 
-class Create{{tableClassName}}Table extends Migration {
+class Create{{tableClassName}}{{time}} extends Migration {
 	/**
 	 * Run the migrations.
 	 *

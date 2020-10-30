@@ -75,8 +75,8 @@ class CreateTableCommand extends CommandAbstract {
 
 	protected function replaceMigration($path, $table, $tableClassName) {
 		$stub = str_replace(
-			['{{table}}', '{{tableClassName}}'],
-			[$table, $tableClassName],
+			['{{table}}', '{{tableClassName}}', '{{time}}'],
+			[$table, $tableClassName, date('Y_m_d_His')],
 			$this->files->get(dirname(__DIR__, 2) . '/stubs/failed_jobs.stub')
 		);
 
