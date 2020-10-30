@@ -44,7 +44,8 @@ class ConsumerProcess extends ProcessAbstract {
 			$config['timeout'] ?? 60,
 			$config['sleep'] ?? 3,
 			$config['tries'] ?? 1,
-			$config['force'] ?? false
+			$config['force'] ?? false,
+			$config['stop_after_empty'] ?? false
 		));
 	}
 }
