@@ -14,14 +14,17 @@ namespace W7\Mq;
 
 use InvalidArgumentException;
 use Swoole\Coroutine;
-use W7\Core\Facades\Context;
+use W7\Contract\Queue\QueueFactoryInterface;
+use W7\Contract\Queue\QueueInterface;
+use W7\Core\Helper\Traiter\AppCommonTrait;
 use W7\Mq\Consumer\ConsumerAbstract;
-use W7\Mq\Queue\QueueInterface;
 
 /**
  * @mixin QueueInterface
  */
-class QueueManager extends \Illuminate\Queue\QueueManager {
+class QueueManager extends \Illuminate\Queue\QueueManager implements QueueFactoryInterface {
+	use AppCommonTrait;
+
 	protected $consumers = [];
 
 	protected function getConfig($name) {
@@ -49,16 +52,10 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 		return call_user_func($this->consumers[$config['driver']], $config);
 	}
 
-	/**
-	 * Resolve a queue connection instance.
-	 *
-	 * @param  string|null  $name
-	 * @return QueueInterface
-	 */
-	public function connection($name = null) {
+	public function connection($name = null): QueueInterface {
 		$name = $name ?: $this->getDefaultDriver();
 		$contextName = $this->getContextKey($name);
-		$connection = Context::getContextDataByKey($contextName);
+		$connection = $this->getContext()->getContextDataByKey($contextName);
 
 		if (! $connection instanceof QueueInterface) {
 			try {
@@ -70,12 +67,12 @@ class QueueManager extends \Illuminate\Queue\QueueManager {
 					$connection->setContainer($this->app);
 				}
 
-				Context::setContextDataByKey($contextName, $connection);
+				$this->getContext()->setContextDataByKey($contextName, $connection);
 			} finally {
 				if ($connection && isCo()) {
 					Coroutine::defer(function () use ($connection, $contextName) {
 						$this->releaseConnection($connection);
-						Context::setContextDataByKey($contextName, null);
+						$this->getContext()->setContextDataByKey($contextName, null);
 					});
 				}
 			}

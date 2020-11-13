@@ -13,6 +13,7 @@
 namespace W7\Mq\Queue;
 
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue as RabbitMQQueueAbstract;
+use W7\Contract\Queue\QueueInterface;
 
 //todo 需要考虑任务发布是否一定到达的问题，事物或者confirm模式
 class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {

@@ -17,7 +17,6 @@ use Illuminate\Support\Str;
 use W7\Command\Support\Composer;
 use W7\Console\Command\CommandAbstract;
 use W7\Core\Exception\CommandException;
-use W7\Core\Facades\Config;
 use W7\DatabaseTool\Migrate\MigrationCreator;
 
 class CreateTableCommand extends CommandAbstract {
@@ -48,7 +47,7 @@ class CreateTableCommand extends CommandAbstract {
 	}
 
 	public function handle($options) {
-		$table = Config::get('queue.failed.table');
+		$table = $this->getConfig()->get('queue.failed.table');
 		if (!$table) {
 			throw new CommandException('configuration queue.failed.table missing, please check the configuration config/queue.php');
 		}

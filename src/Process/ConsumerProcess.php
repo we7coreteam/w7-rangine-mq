@@ -14,8 +14,7 @@ namespace W7\Mq\Process;
 
 use Illuminate\Queue\WorkerOptions;
 use Swoole\Process;
-use W7\Core\Facades\Config;
-use W7\Core\Facades\Container;
+use W7\Contract\Queue\QueueFactoryInterface;
 use W7\Core\Process\ProcessAbstract;
 use W7\Mq\QueueManager;
 
@@ -29,13 +28,13 @@ class ConsumerProcess extends ProcessAbstract {
 	}
 
 	protected function run(Process $process) {
-		Container::set('worker_id', $this->getWorkerId());
+		$this->getContainer()->set('worker_id', $this->getWorkerId());
 
 		/**
 		 * @var QueueManager $queueManager
 		 */
-		$queueManager = Container::singleton('queue');
-		$config = Config::get('queue.queue.' . $this->getName());
+		$queueManager = $this->getContainer()->singleton(QueueFactoryInterface::class);
+		$config = $this->getConfig()->get('queue.queue.' . $this->getName());
 		$consumer = $queueManager->getConsumer($this->getName());
 
 		$consumer->consume($this->getName(), $config['queue'], new WorkerOptions(

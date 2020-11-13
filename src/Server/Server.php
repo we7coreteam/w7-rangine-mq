@@ -12,15 +12,14 @@
 
 namespace W7\Mq\Server;
 
-use W7\Core\Facades\Config;
 use W7\Core\Process\ProcessServerAbstract;
 use W7\Mq\Process\ConsumerProcess;
 
 class Server extends ProcessServerAbstract {
 	public function __construct() {
 		//添加process 到server.php中
-		$mqSetting = Config::get($this->getType() . '.setting', []);
-		Config::set('server.' . $this->getType(), $mqSetting);
+		$mqSetting = $this->getConfig()->get($this->getType() . '.setting', []);
+		$this->getConfig()->set('server.' . $this->getType(), $mqSetting);
 
 		parent::__construct();
 	}
@@ -30,13 +29,13 @@ class Server extends ProcessServerAbstract {
 	}
 
 	protected function checkSetting() {
-		$queues = Config::get('queue.queue', []);
+		$queues = $this->getConfig()->get('queue.queue', []);
 		foreach ($queues as $name => &$queue) {
 			//如果是全部启动的话，enable和配置中的值保持一致
 			$queue['enable'] = $queue['enable'] ?? true;
 		}
 
-		Config::set('queue.queue', $queues);
+		$this->getConfig()->set('queue.queue', $queues);
 
 		$this->setting['worker_num'] = $this->getWorkerNum();
 		if ($this->setting['worker_num'] == 0) {
@@ -48,7 +47,7 @@ class Server extends ProcessServerAbstract {
 
 	private function getWorkerNum() {
 		$workerNum = 0;
-		$queues = Config::get('queue.queue', []);
+		$queues = $this->getConfig()->get('queue.queue', []);
 		foreach ($queues as $name => $queue) {
 			if (empty($queue['enable'])) {
 				continue;
@@ -60,7 +59,7 @@ class Server extends ProcessServerAbstract {
 	}
 
 	protected function register() {
-		$queues = Config::get('queue.queue', []);
+		$queues = $this->getConfig()->get('queue.queue', []);
 		foreach ($queues as $name => $queue) {
 			if (empty($queue['enable'])) {
 				continue;

@@ -14,9 +14,8 @@ namespace W7\Mq\Command\Queue;
 
 use Symfony\Component\Console\Input\InputOption;
 use W7\Console\Command\CommandAbstract;
+use W7\Contract\Queue\QueueFactoryInterface;
 use W7\Core\Exception\CommandException;
-use W7\Core\Facades\Config;
-use W7\Core\Facades\Container;
 use W7\Mq\Queue\RabbitMQQueue;
 use W7\Mq\QueueManager;
 
@@ -35,7 +34,7 @@ class DeleteCommand extends CommandAbstract {
 			throw new CommandException('the option queue not be empty');
 		}
 
-		$queueConfig = Config::get('queue.queue.' . $options['queue']);
+		$queueConfig = $this->getConfig()->get('queue.queue.' . $options['queue']);
 		$queueName = $queueConfig['queue'] ?? '';
 		if (empty($queueName)) {
 			throw new CommandException('queue name config missing, please check the configuration config/queue.php');
@@ -43,7 +42,7 @@ class DeleteCommand extends CommandAbstract {
 		/**
 		 * @var QueueManager $queueManager
 		 */
-		$queueManager = Container::singleton('queue');
+		$queueManager = $this->getContainer()->singleton(QueueFactoryInterface::class);
 		/**
 		 * @var RabbitMQQueue $queue
 		 */

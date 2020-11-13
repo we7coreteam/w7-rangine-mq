@@ -21,11 +21,10 @@ use Illuminate\Queue\Failed\DatabaseFailedJobProvider;
 use Illuminate\Queue\Failed\NullFailedJobProvider;
 use W7\App;
 use W7\Console\Application;
+use W7\Contract\Queue\QueueFactoryInterface;
 use W7\Core\Database\ConnectionResolver;
 use W7\Core\Task\TaskDispatcher;
-use W7\Core\Events\Dispatcher;
 use W7\Core\Exception\HandlerExceptions;
-use W7\Core\Facades\Event;
 use W7\Core\Provider\ProviderAbstract;
 use W7\Core\Server\ServerEnum;
 use W7\Core\Server\ServerEvent;
@@ -60,12 +59,12 @@ class ServiceProvider extends ProviderAbstract {
 	 * @return void
 	 */
 	protected function registerQueueManager() {
-		$this->container->set('queue', function () {
+		$this->container->set(QueueFactoryInterface::class, function () {
 			$queueConfig = $this->config->get('queue.queue', []);
 			/**
 			 * @var Container $container
 			 */
-			$container = $this->container->get(Container::class);
+			$container = $this->container->singleton(Container::class);
 			$container['config']['queue.default'] = $this->config->get('queue.default', 'rabbit_mq');
 			$container['config']['queue.connections'] = $queueConfig;
 
@@ -73,7 +72,7 @@ class ServiceProvider extends ProviderAbstract {
 			$this->registerConnectorAndConsumer($manager);
 
 			$container->singleton(\Illuminate\Contracts\Events\Dispatcher::class, function () {
-				return $this->container->get(Dispatcher::class);
+				return $this->getEventDispatcher();
 			});
 			$container->singleton(\Illuminate\Contracts\Bus\Dispatcher::class, function () use ($container, $manager) {
 				return new \Illuminate\Bus\Dispatcher($container, function ($connection = null) use ($manager) {
@@ -92,7 +91,7 @@ class ServiceProvider extends ProviderAbstract {
 	 */
 	protected function registerQueueConnection() {
 		$this->container->set('queue.connection', function () {
-			return $this->container->singleton('queue')->connection();
+			return $this->container->singleton(QueueFactoryInterface::class)->connection();
 		});
 	}
 
@@ -122,10 +121,10 @@ class ServiceProvider extends ProviderAbstract {
 		});
 
 		$manager->addConnector('rabbit_mq', function () {
-			return new RabbitMQConnector($this->container->singleton(Dispatcher::class));
+			return new RabbitMQConnector($this->getEventDispatcher());
 		});
 		$manager->addConsumer('rabbit_mq', function ($options = []) use ($manager) {
-			$consumer = new RabbitMQConsumer($manager, $this->container->singleton(Dispatcher::class), $this->container->singleton(HandlerExceptions::class)->getHandler());
+			$consumer = new RabbitMQConsumer($manager, $this->getEventDispatcher(), $this->container->singleton(HandlerExceptions::class)->getHandler());
 			$consumer->setContainer($this->container->singleton(Container::class));
 			$consumer->setConsumerTag($this->container->get('rabbit-mq-server-tag-resolver')($options));
 			$consumer->setPrefetchCount($options['prefetch_count'] ?? 0);
@@ -180,31 +179,31 @@ class ServiceProvider extends ProviderAbstract {
 	 * @return void
 	 */
 	protected function registerEventListener() {
-		$this->registerEvent(JobFailed::class, function ($event) {
+		$this->getEventDispatcher()->listen(JobFailed::class, function ($event) {
 			/**
 			 * @var JobFailed $event
 			 */
-			Event::dispatch(new QueueTaskFailedEvent($event->connectionName, $event->job, $event->exception));
+			$this->getEventDispatcher()->dispatch(new QueueTaskFailedEvent($event->connectionName, $event->job, $event->exception));
 
 			$this->logFailedJob($event);
 		});
-		$this->registerEvent(JobProcessing::class, function ($event) {
+		$this->getEventDispatcher()->listen(JobProcessing::class, function ($event) {
 			/**
 			 * @var JobProcessing $event
 			 */
-			Event::dispatch(new QueueTaskProcessingEvent($event->connectionName, $event->job));
+			$this->getEventDispatcher()->dispatch(new QueueTaskProcessingEvent($event->connectionName, $event->job));
 		});
-		$this->registerEvent(JobProcessed::class, function ($event) {
+		$this->getEventDispatcher()->listen(JobProcessed::class, function ($event) {
 			/**
 			 * @var JobProcessed $event
 			 */
-			Event::dispatch(new QueueTaskProcessedEvent($event->connectionName, $event->job));
+			$this->getEventDispatcher()->dispatch(new QueueTaskProcessedEvent($event->connectionName, $event->job));
 		});
-		$this->registerEvent(JobExceptionOccurred::class, function ($event) {
+		$this->getEventDispatcher()->listen(JobExceptionOccurred::class, function ($event) {
 			/**
 			 * @var JobExceptionOccurred $event
 			 */
-			Event::dispatch(new QueueTaskExceptionOccurredEvent($event->connectionName, $event->job, $event->exception));
+			$this->getEventDispatcher()->dispatch(new QueueTaskExceptionOccurredEvent($event->connectionName, $event->job, $event->exception));
 		});
 	}
 
@@ -224,6 +223,6 @@ class ServiceProvider extends ProviderAbstract {
 	}
 
 	public function providers(): array {
-		return ['queue', 'queue.failer', 'queue.connection', Application::class, TaskDispatcher::class];
+		return [QueueFactoryInterface::class, 'queue.failer', 'queue.connection', Application::class, TaskDispatcher::class];
 	}
 }

@@ -1,32 +1,39 @@
 {
-  "name": "w7/rangine-mq",
-  "description": "rangine mq",
-  "type": "library",
-  "keywords": [
-    "rangine",
-    "mq"
-  ],
-  "license": "Apache-2.0",
-  "require": {
-    "php": ">=7.2.0",
-    "w7/rangine": "*",
-    "illuminate/queue": "~6.0",
-    "illuminate/bus": "~6.0",
-    "vladimir-yuldashev/laravel-queue-rabbitmq": "^10.2"
-  },
-  "require-dev": {
-    "w7/php-cs-fixer": "^1.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "W7\\Mq\\": "src/"
-    }
-  },
-  "extra": {
-    "rangine": {
-      "providers": [
-        "W7\\Mq\\ServiceProvider"
-      ]
-    }
-  }
+	"name": "w7/rangine-mq",
+	"description": "rangine mq",
+	"type": "library",
+	"keywords": [
+		"rangine",
+		"mq"
+	],
+	"license": "Apache-2.0",
+	"require": {
+		"php": ">=7.2.0",
+		"w7/rangine": "*",
+		"w7/rangine-contract": "dev-master",
+		"illuminate/queue": "~6.0",
+		"illuminate/bus": "~6.0",
+		"vladimir-yuldashev/laravel-queue-rabbitmq": "^10.2"
+	},
+	"require-dev": {
+		"w7/php-cs-fixer": "*"
+	},
+	"repositories": [
+		{
+			"type": "path",
+			"url": "../w7-rangine-contract"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"W7\\Mq\\": "src/"
+		}
+	},
+	"extra": {
+		"rangine": {
+			"providers": [
+				"W7\\Mq\\ServiceProvider"
+			]
+		}
+	}
 }

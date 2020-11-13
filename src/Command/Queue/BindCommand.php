@@ -14,9 +14,8 @@ namespace W7\Mq\Command\Queue;
 
 use Symfony\Component\Console\Input\InputOption;
 use W7\Console\Command\CommandAbstract;
+use W7\Contract\Queue\QueueFactoryInterface;
 use W7\Core\Exception\CommandException;
-use W7\Core\Facades\Config;
-use W7\Core\Facades\Container;
 use W7\Mq\Queue\RabbitMQQueue;
 use W7\Mq\QueueManager;
 
@@ -35,8 +34,8 @@ class BindCommand extends CommandAbstract {
 		/**
 		 * @var QueueManager $queueManager
 		 */
-		$queueManager = Container::singleton('queue');
-		$queueConfig = Config::get('queue.queue.' . $options['queue']);
+		$queueManager = $this->getContainer()->singleton(QueueFactoryInterface::class);
+		$queueConfig = $this->getConfig()->get('queue.queue.' . $options['queue']);
 		/**
 		 * @var RabbitMQQueue $queue
 		 */
