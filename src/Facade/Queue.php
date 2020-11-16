@@ -18,7 +18,4 @@ namespace W7\Mq\Facade;
  * @package W7\Mq\Facade
  */
 class Queue extends \W7\Facade\Queue {
-	protected static function getFacadeAccessor() {
-		return 'queue';
-	}
 }
