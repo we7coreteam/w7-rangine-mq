@@ -10,7 +10,7 @@
 	"require": {
 		"php": ">=7.2.0",
 		"w7/rangine": "*",
-		"w7/rangine-contract": "dev-master",
+		"w7/rangine-contract": "*",
 		"illuminate/queue": "~6.0",
 		"illuminate/bus": "~6.0",
 		"vladimir-yuldashev/laravel-queue-rabbitmq": "^10.2"
@@ -18,12 +18,6 @@
 	"require-dev": {
 		"w7/php-cs-fixer": "*"
 	},
-	"repositories": [
-		{
-			"type": "path",
-			"url": "../w7-rangine-contract"
-		}
-	],
 	"autoload": {
 		"psr-4": {
 			"W7\\Mq\\": "src/"
