@@ -68,7 +68,7 @@ class CreateTableCommand extends CommandAbstract {
 		$creator = new MigrationCreator($filesystem);
 		return $creator->create(
 			'create_'.$table.'_table',
-			BASE_PATH.DIRECTORY_SEPARATOR.'database/migrations'
+			BASE_PATH . '/database/migrations'
 		);
 	}
 
