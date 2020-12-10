@@ -153,7 +153,9 @@ class SwooleIO extends AbstractIO {
 
 			$read_buffer = $this->sock->recv($this->readWriteTimeout ? $this->readWriteTimeout : -1);
 			if ($read_buffer === false) {
-				throw new AMQPRuntimeException('Error receiving data, errno=' . $this->sock->errCode);
+				if ($this->sock->errCode != SOCKET_ETIMEDOUT) {
+					throw new AMQPRuntimeException('Error receiving data, errno=' . $this->sock->errCode);
+				}
 			}
 
 			if ($read_buffer === '') {
