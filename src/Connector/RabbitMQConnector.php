@@ -15,17 +15,15 @@ namespace W7\Mq\Connector;
 use Illuminate\Support\Arr;
 use PhpAmqpLib\Connection\AbstractConnection;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Connectors\RabbitMQConnector as RabbitMQConnectorAbstract;
+use W7\Core\Helper\Compate\SwooleHelper;
 use W7\Mq\Amqp\Connection\AMQPSwooleConnection;
 use W7\Mq\Queue\RabbitMQQueue;
 
 class RabbitMQConnector extends RabbitMQConnectorAbstract implements ConnectorInterface {
 	protected function createConnection(array $config): AbstractConnection {
 		if (!Arr::get($config, 'connection', null)) {
-			static $hasLoadSwooleExtension = true;
-			if ($hasLoadSwooleExtension && extension_loaded('swoole') && version_compare(SWOOLE_VERSION, '4.4.0', '>=')) {
+			if (SwooleHelper::checkLoadSwooleExtension(false)) {
 				$config['connection'] = AMQPSwooleConnection::class;
-			} else {
-				$hasLoadSwooleExtension = false;
 			}
 		}
 
