@@ -28,12 +28,10 @@ class ConsumerProcess extends ProcessAbstract {
 	}
 
 	protected function run(Process $process) {
-		$this->getContainer()->set('worker_id', $this->getWorkerId());
-
 		/**
 		 * @var QueueManager $queueManager
 		 */
-		$queueManager = $this->getContainer()->singleton(QueueFactoryInterface::class);
+		$queueManager = $this->getContainer()->get(QueueFactoryInterface::class);
 		$config = $this->getConfig()->get('queue.queue.' . $this->getName());
 		$consumer = $queueManager->getConsumer($this->getName());
 

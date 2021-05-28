@@ -42,7 +42,7 @@ class ServiceProvider extends ProviderAbstract {
 		/**
 		 * @var ServerEvent $event
 		 */
-		$event = $this->container->singleton(ServerEvent::class);
+		$event = $this->container->get(ServerEvent::class);
 		$this->registerServerEvent('queue', $event->getDefaultEvent()[ServerEnum::TYPE_PROCESS]);
 
 		$this->registerCommand();
@@ -64,7 +64,7 @@ class ServiceProvider extends ProviderAbstract {
 			/**
 			 * @var Container $container
 			 */
-			$container = $this->container->singleton(Container::class);
+			$container = Container::getInstance();
 			$container['config']['queue.default'] = $this->config->get('queue.default', 'rabbit_mq');
 			$container['config']['queue.connections'] = $queueConfig;
 
@@ -91,7 +91,7 @@ class ServiceProvider extends ProviderAbstract {
 	 */
 	protected function registerQueueConnection() {
 		$this->container->set('queue.connection', function () {
-			return $this->container->singleton(QueueFactoryInterface::class)->connection();
+			return $this->container->get(QueueFactoryInterface::class)->connection();
 		});
 	}
 
@@ -124,8 +124,8 @@ class ServiceProvider extends ProviderAbstract {
 			return new RabbitMQConnector($this->getEventDispatcher());
 		});
 		$manager->addConsumer('rabbit_mq', function ($options = []) use ($manager) {
-			$consumer = new RabbitMQConsumer($manager, $this->getEventDispatcher(), $this->container->singleton(HandlerExceptions::class)->getHandler());
-			$consumer->setContainer($this->container->singleton(Container::class));
+			$consumer = new RabbitMQConsumer($manager, $this->getEventDispatcher(), $this->container->get(HandlerExceptions::class)->getHandler());
+			$consumer->setContainer(Container::getInstance());
 			$consumer->setConsumerTag($this->container->get('rabbit-mq-server-tag-resolver')($options));
 			$consumer->setPrefetchCount($options['prefetch_count'] ?? 0);
 			$consumer->setPrefetchSize($options['prefetch_size'] ?? 0);
@@ -150,13 +150,13 @@ class ServiceProvider extends ProviderAbstract {
 			}
 		});
 
-		/**
-		 * @var Container $container
-		 */
-		$container = $this->container->get(Container::class);
-		$container->singleton('queue.failer', function () {
-			return $this->container->singleton('queue.failer');
-		});
+//		/**
+//		 * @var Container $container
+//		 */
+//		$container = Container::getInstance();
+//		$container->singleton('queue.failer', function () {
+//			return $this->container->get('queue.failer');
+//		});
 	}
 
 	/**
@@ -214,7 +214,7 @@ class ServiceProvider extends ProviderAbstract {
 	 * @return void
 	 */
 	protected function logFailedJob(JobFailed $event) {
-		$this->container->singleton('queue.failer')->log(
+		$this->container->get('queue.failer')->log(
 			$event->connectionName,
 			$event->job->getQueue(),
 			$event->job->getRawBody(),
