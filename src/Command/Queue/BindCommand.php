@@ -34,7 +34,7 @@ class BindCommand extends CommandAbstract {
 		/**
 		 * @var QueueManager $queueManager
 		 */
-		$queueManager = $this->getContainer()->singleton(QueueFactoryInterface::class);
+		$queueManager = $this->getContainer()->get(QueueFactoryInterface::class);
 		$queueConfig = $this->getConfig()->get('queue.queue.' . $options['queue']);
 		/**
 		 * @var RabbitMQQueue $queue

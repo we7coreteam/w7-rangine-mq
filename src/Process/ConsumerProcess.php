@@ -33,7 +33,7 @@ class ConsumerProcess extends ProcessAbstract {
 		/**
 		 * @var QueueManager $queueManager
 		 */
-		$queueManager = $this->getContainer()->singleton(QueueFactoryInterface::class);
+		$queueManager = $this->getContainer()->get(QueueFactoryInterface::class);
 		$config = $this->getConfig()->get('queue.queue.' . $this->getName());
 		$consumer = $queueManager->getConsumer($this->getName());
 
