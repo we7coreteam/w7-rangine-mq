@@ -159,6 +159,7 @@ class SwooleIO extends AbstractIO {
 			}
 
 			if ($read_buffer === '') {
+				$this->close();
 				throw new AMQPRuntimeException('Connection is closed.');
 			}
 
