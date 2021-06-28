@@ -41,7 +41,7 @@ class ExchangeDeleteCommand extends CommandAbstract {
 		/**
 		 * @var QueueManager $queueManager
 		 */
-		$queueManager = $this->getContainer()->singleton(QueueFactoryInterface::class);
+		$queueManager = $this->getContainer()->get(QueueFactoryInterface::class);
 		/**
 		 * @var RabbitMQQueue $queue
 		 */

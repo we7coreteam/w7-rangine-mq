@@ -14,6 +14,7 @@ namespace W7\Mq\Command\Queue\Failed;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use W7\App;
 use W7\Command\Support\Composer;
 use W7\Console\Command\CommandAbstract;
 use W7\Core\Exception\CommandException;
@@ -43,7 +44,7 @@ class CreateTableCommand extends CommandAbstract {
 		parent::__construct($name);
 
 		$this->files = new Filesystem();
-		$this->composer = new Composer($this->files, BASE_PATH);
+		$this->composer = new Composer($this->files, App::getApp()->getBasePath());
 	}
 
 	public function handle($options) {
@@ -68,7 +69,7 @@ class CreateTableCommand extends CommandAbstract {
 		$creator = new MigrationCreator($filesystem);
 		return $creator->create(
 			'create_'.$table.'_table',
-			BASE_PATH . '/database/migrations'
+			App::getApp()->getBasePath() . '/database/migrations'
 		);
 	}
 
