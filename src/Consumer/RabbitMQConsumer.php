@@ -89,18 +89,12 @@ class RabbitMQConsumer extends ConsumerAbstract {
 					$queue
 				);
 
-				if (!$job) {
-					return;
-				}
-
 				$timerId = $this->registerTimeoutHandler($job, $options);
 
 				// If we're able to pull a job off of the stack, we will process it and then return
 				// from this method. If there is no job on the queue, we will "sleep" the worker
 				// for the specified number of seconds, then keep processing jobs after sleep.
-				if ($job) {
-					$this->runJob($job, $connectionName, $options);
-				}
+				$this->runJob($job, $connectionName, $options);
 
 				$this->resetTimeoutHandler($timerId);
 				$this->stopIfNecessary($options, time());
