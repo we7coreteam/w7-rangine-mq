@@ -13,7 +13,8 @@
 		"w7/rangine-contract": "*",
 		"illuminate/queue": "^8.0",
 		"illuminate/bus": "^8.0",
-		"vladimir-yuldashev/laravel-queue-rabbitmq": "^11.0"
+		"vladimir-yuldashev/laravel-queue-rabbitmq": "^11.0",
+		"symfony/string": "^5.1"
 	},
 	"require-dev": {
 		"w7/php-cs-fixer": "*"

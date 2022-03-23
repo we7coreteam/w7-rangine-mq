@@ -233,7 +233,7 @@ class SwooleIO extends AbstractIO {
 	 * @param int $usec
 	 * @return int|mixed
 	 */
-	public function select($sec, $usec) {
+	public function select(?int $sec, int $usec = 0) {
 		$this->check_heartbeat();
 
 		return 1;
