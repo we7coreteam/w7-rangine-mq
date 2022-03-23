@@ -9,7 +9,7 @@
 	"license": "Apache-2.0",
 	"require": {
 		"php": ">=7.2.0",
-		"w7/rangine": "3.0.0",
+		"w7/rangine": "^3.0",
 		"w7/rangine-contract": "*",
 		"illuminate/queue": "^8.0",
 		"illuminate/bus": "^8.0",
