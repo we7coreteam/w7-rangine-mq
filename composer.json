@@ -11,8 +11,8 @@
 		"php": ">=7.2.0",
 		"w7/rangine": "*",
 		"w7/rangine-contract": "*",
-		"illuminate/queue": "^6.0|^7.0",
-		"illuminate/bus": "^6.0|^7.0",
+		"illuminate/queue": "^6.0|^7.0|^8.0",
+		"illuminate/bus": "^6.0|^7.0|^8.0",
 		"vladimir-yuldashev/laravel-queue-rabbitmq": "^10.2"
 	},
 	"require-dev": {
@@ -28,6 +28,13 @@
 			"providers": [
 				"W7\\Mq\\ServiceProvider"
 			]
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"w7/php-cs-fixer": true,
+			"funkjedi/composer-include-files": true,
+			"w7/rangine-package-plugin": true
 		}
 	}
 }
