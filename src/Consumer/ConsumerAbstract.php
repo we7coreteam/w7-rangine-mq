@@ -295,7 +295,7 @@ abstract class ConsumerAbstract {
 				$job->release(
 					method_exists($job, 'delaySeconds') && ! is_null($job->delaySeconds())
 						? $job->delaySeconds()
-						: $options->delay
+						: $options->backoff
 				);
 			}
 		}
@@ -312,7 +312,7 @@ abstract class ConsumerAbstract {
 	protected function markJobAsFailedIfAlreadyExceedsMaxAttempts($connectionName, $job, $maxTries) {
 		$maxTries = ! is_null($job->maxTries()) ? $job->maxTries() : $maxTries;
 
-		$timeoutAt = $job->timeoutAt();
+		$timeoutAt = $job->retryUntil();
 
 		if ($timeoutAt && Carbon::now()->getTimestamp() <= $timeoutAt) {
 			return;
@@ -337,7 +337,7 @@ abstract class ConsumerAbstract {
 	protected function markJobAsFailedIfWillExceedMaxAttempts($connectionName, $job, $maxTries, $e) {
 		$maxTries = ! is_null($job->maxTries()) ? $job->maxTries() : $maxTries;
 
-		if ($job->timeoutAt() && $job->timeoutAt() <= Carbon::now()->getTimestamp()) {
+		if ($job->retryUntil() && $job->retryUntil() <= Carbon::now()->getTimestamp()) {
 			$this->failJob($job, $e);
 		}
 

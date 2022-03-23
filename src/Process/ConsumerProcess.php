@@ -36,6 +36,7 @@ class ConsumerProcess extends ProcessAbstract {
 		$consumer = $queueManager->getConsumer($this->getName());
 
 		$consumer->consume($this->getName(), $config['queue'], new WorkerOptions(
+			$config['queue'],
 			$config['delay'] ?? 0,
 			$config['memory'] ?? 128,
 			$config['timeout'] ?? 60,
