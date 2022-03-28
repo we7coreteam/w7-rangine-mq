@@ -12,7 +12,6 @@
 
 namespace W7\Mq\Amqp\Wire\IO;
 
-use AMQPConnectionException;
 use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 use PhpAmqpLib\Exception\AMQPRuntimeException;
 use PhpAmqpLib\Wire\IO\AbstractIO;
@@ -113,7 +112,7 @@ class SwooleIO extends AbstractIO {
 	public function connect() {
 		$sock = new Client(SWOOLE_SOCK_TCP);
 		if (! $sock->connect($this->host, $this->port, $this->connectionTimeout)) {
-			throw new AMQPConnectionException(
+			throw new AMQPRuntimeException(
 				sprintf(
 					'Error Connecting to server(%s): %s ',
 					$sock->errCode,
