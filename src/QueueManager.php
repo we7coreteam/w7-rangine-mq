@@ -82,6 +82,9 @@ class QueueManager extends \Illuminate\Queue\QueueManager implements QueueFactor
 	}
 
 	private function releaseConnection($connection) {
+		if (method_exists($connection, 'releaseConnection')) {
+			$connection->releaseConnection();
+		}
 		return true;
 	}
 
