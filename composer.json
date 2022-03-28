@@ -9,11 +9,12 @@
 	"license": "Apache-2.0",
 	"require": {
 		"php": ">=7.2.0",
-		"w7/rangine": "*",
+		"w7/rangine": "^3.0",
 		"w7/rangine-contract": "*",
-		"illuminate/queue": "^6.0|^7.0",
-		"illuminate/bus": "^6.0|^7.0",
-		"vladimir-yuldashev/laravel-queue-rabbitmq": "^10.2"
+		"illuminate/queue": "^8.0",
+		"illuminate/bus": "^8.0",
+		"vladimir-yuldashev/laravel-queue-rabbitmq": "^11.0",
+		"symfony/string": "^5.1"
 	},
 	"require-dev": {
 		"w7/php-cs-fixer": "*"
@@ -28,6 +29,13 @@
 			"providers": [
 				"W7\\Mq\\ServiceProvider"
 			]
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"w7/php-cs-fixer": true,
+			"funkjedi/composer-include-files": true,
+			"w7/rangine-package-plugin": true
 		}
 	}
 }
