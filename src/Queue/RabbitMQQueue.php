@@ -39,4 +39,8 @@ class RabbitMQQueue extends RabbitMQQueueAbstract implements QueueInterface {
 			? $this->createObjectPayload($job, $queue)
 			: $this->createStringPayload($job, $queue, $data);
 	}
+
+	public function releaseConnection() {
+		$this->close();
+	}
 }
