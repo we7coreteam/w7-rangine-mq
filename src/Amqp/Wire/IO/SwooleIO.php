@@ -12,6 +12,7 @@
 
 namespace W7\Mq\Amqp\Wire\IO;
 
+use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 use PhpAmqpLib\Exception\AMQPRuntimeException;
 use PhpAmqpLib\Wire\IO\AbstractIO;
 use Swoole\Coroutine\Client;
@@ -148,7 +149,7 @@ class SwooleIO extends AbstractIO {
 			}
 
 			if (! $this->sock->connected) {
-				throw new AMQPRuntimeException('Broken pipe or closed connection');
+				throw new AMQPConnectionClosedException('Broken pipe or closed connection');
 			}
 
 			$read_buffer = $this->sock->recv($this->readWriteTimeout ? $this->readWriteTimeout : -1);
@@ -160,7 +161,7 @@ class SwooleIO extends AbstractIO {
 
 			if ($read_buffer === '') {
 				$this->close();
-				throw new AMQPRuntimeException('Connection is closed.');
+				throw new AMQPConnectionClosedException('Connection is closed.');
 			}
 
 			$this->buffer .= $read_buffer;
