@@ -106,7 +106,11 @@ class RabbitMQConsumer extends ConsumerAbstract {
 				$this->channel->wait();
 			} catch (Throwable $exception) {
 				$this->exceptions->report($exception);
+				break;
 			}
 		}
+
+		$this->channel->close();
+		$connection->close();
 	}
 }
