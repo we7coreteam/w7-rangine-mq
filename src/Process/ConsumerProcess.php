@@ -34,6 +34,7 @@ class ConsumerProcess extends ProcessAbstract {
 		$queueManager = $this->getContainer()->get(QueueFactoryInterface::class);
 		$config = $this->getConfig()->get('queue.queue.' . $this->getName());
 		$consumer = $queueManager->getConsumer($this->getName());
+		$consumer->setProcess($process);
 
 		$consumer->consume($this->getName(), $config['queue'], new WorkerOptions(
 			$config['queue'],
