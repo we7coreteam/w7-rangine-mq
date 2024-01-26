@@ -20,6 +20,7 @@ use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Queue\WorkerOptions;
 use Illuminate\Support\Carbon;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Swoole\Process;
 use Swoole\Timer;
 use W7\Core\Exception\Handler\ExceptionHandler;
 use W7\Mq\Event\ConsumerExitEvent;
@@ -57,6 +58,11 @@ abstract class ConsumerAbstract {
 	public $shouldQuit = false;
 
 	/**
+	 * @var Process
+	 */
+	public $process;
+
+	/**
 	 * @param  QueueManager  $manager
 	 * @param  EventDispatcherInterface  $events
 	 * @param  ExceptionHandler  $exceptions
@@ -66,6 +72,10 @@ abstract class ConsumerAbstract {
 		$this->events = $events;
 		$this->manager = $manager;
 		$this->exceptions = $exceptions;
+	}
+
+	public function setProcess(Process $process) {
+		$this->process = $process;
 	}
 
 	/**
@@ -200,7 +210,11 @@ abstract class ConsumerAbstract {
 	 * @return void
 	 */
 	public function stop($status = 0) {
-		exit($status);
+		if ($this->process) {
+			$this->process->exit($status);
+		} else {
+			exit($status);
+		}
 	}
 
 	/**

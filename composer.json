@@ -16,7 +16,8 @@
 		"vladimir-yuldashev/laravel-queue-rabbitmq": "^10.2"
 	},
 	"require-dev": {
-		"w7/php-cs-fixer": "*"
+		"w7/php-cs-fixer": "*",
+		"swoole/ide-helper": "^5.1"
 	},
 	"autoload": {
 		"psr-4": {
@@ -28,6 +29,13 @@
 			"providers": [
 				"W7\\Mq\\ServiceProvider"
 			]
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"funkjedi/composer-include-files": true,
+			"w7/rangine-package-plugin": true,
+			"w7/php-cs-fixer": true
 		}
 	}
 }
